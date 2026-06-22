@@ -48,6 +48,37 @@ export interface CashierInvoiceView {
   fromQr: true;
 }
 
+export function buildInvoiceQrString(
+  order: {
+    _id: string;
+    invoiceQrCode: string;
+    subtotal?: number;
+    taxAmount?: number;
+    totalAmount: number;
+    paymentMethod: string;
+    status: string;
+    createdAt?: string;
+  },
+  customer: { name: string; email?: string },
+  items: Array<{ name: string; quantity: number; price: number }>
+): string {
+  const payload: InvoiceQrPayload = {
+    v: 1,
+    orderId: order._id,
+    ref: order.invoiceQrCode,
+    customer: customer.name,
+    email: customer.email,
+    items: items.map((item) => [item.name, item.quantity, item.price]),
+    subtotal: order.subtotal ?? 0,
+    tax: order.taxAmount ?? 0,
+    total: order.totalAmount,
+    pm: order.paymentMethod,
+    at: order.createdAt ?? new Date().toISOString(),
+    status: order.status === 'paid' ? 'paid' : 'pending',
+  };
+  return `${INVOICE_QR_PREFIX}${JSON.stringify(payload)}`;
+}
+
 export function qrPayloadToCashierView(payload: InvoiceQrPayload): CashierInvoiceView {
   return {
     _id: payload.orderId,
