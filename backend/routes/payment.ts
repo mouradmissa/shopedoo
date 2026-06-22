@@ -4,7 +4,15 @@ import Order from '../models/Order';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { CURRENCY_CODE, toStripeAmount } from '../constants/currency';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+let stripeClient: Stripe | null = null;
+
+function getStripe(): Stripe | null {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) return null;
+  if (!stripeClient) stripeClient = new Stripe(key);
+  return stripeClient;
+}
+
 const router: Router = express.Router();
 
 interface PaymentIntentRequest {
@@ -17,6 +25,12 @@ router.post(
   authMiddleware,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+      const stripe = getStripe();
+      if (!stripe) {
+        res.status(503).json({ error: 'Stripe is not configured' });
+        return;
+      }
+
       const { orderId } = req.body as PaymentIntentRequest;
 
       if (!orderId) {
@@ -63,6 +77,12 @@ router.post(
   authMiddleware,
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
+      const stripe = getStripe();
+      if (!stripe) {
+        res.status(503).json({ error: 'Stripe is not configured' });
+        return;
+      }
+
       const { orderId, paymentIntentId } = req.body;
 
       if (!orderId || !paymentIntentId) {
@@ -106,6 +126,12 @@ router.post(
 
 // Webhook for payment events
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req: express.Request, res: Response): Promise<void> => {
+  const stripe = getStripe();
+  if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
+    res.status(503).send('Stripe webhook is not configured');
+    return;
+  }
+
   const sig = req.headers['stripe-signature'] as string;
   let event;
 
