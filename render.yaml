@@ -5,7 +5,7 @@ services:
     name: shopedoo-api
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build:api
+    buildCommand: npm install --include=dev && npm run build:api
     startCommand: npm run start:api
     healthCheckPath: /health
     envVars:
@@ -29,7 +29,7 @@ services:
     name: shopedoo-web
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm run start
     envVars:
       - key: NODE_ENV
