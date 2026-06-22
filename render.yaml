@@ -1,0 +1,41 @@
+# Blueprint Render — ShopEdoo
+# Déploiement : Dashboard Render → New → Blueprint → connecter le repo GitHub
+services:
+  - type: web
+    name: shopedoo-api
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build:api
+    startCommand: npm run start:api
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: shopedoo-web
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: shopedoo-web
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: shopedoo-api
+          envVarKey: RENDER_EXTERNAL_URL
