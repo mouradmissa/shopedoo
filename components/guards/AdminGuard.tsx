@@ -20,6 +20,10 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       router.replace('/caissier');
       return;
     }
+    if (user?.role === 'manager') {
+      router.replace('/manager');
+      return;
+    }
     if (user && !canAccessAdmin(user.role)) {
       router.replace('/');
     }

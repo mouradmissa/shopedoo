@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Trash2, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { formatPrice } from '@/lib/currency';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageTitleBar } from '@/components/layout/PageTitleBar';
 
 interface CartItem {
   productId: {
@@ -89,22 +89,22 @@ export default function CartPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-card flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <p className="text-muted-foreground">Chargement du panier...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
-      <PageHeader
+    <>
+      <PageTitleBar
         title="Panier"
         backHref="/"
         backLabel="Boutique"
-        icon={<ShoppingCart className="w-5 h-5 shrink-0" />}
+        icon={<ShoppingCart className="w-4 h-4 shrink-0 text-primary" />}
       />
 
-      <div className="page-container py-6 sm:py-8">
+      <div className="page-container py-6 sm:py-8 flex-1">
         {!cart || cart.items.length === 0 ? (
           <div className="text-center py-16 sm:py-20">
             <ShoppingCart className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
@@ -240,6 +240,6 @@ export default function CartPage() {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { LOGO_VARIANTS, type LogoVariant } from './logoConfig';
 
 const LOGO_SRC = '/shopedoo-logo.png';
 const LOGO_ASPECT = 920 / 271;
@@ -8,6 +9,7 @@ const LOGO_ASPECT = 920 / 271;
 interface ShopEdooLogoProps {
   href?: string;
   height?: number;
+  variant?: LogoVariant;
   className?: string;
   imageClassName?: string;
   suffix?: React.ReactNode;
@@ -24,7 +26,7 @@ function LogoImage({
   return (
     <Image
       src={LOGO_SRC}
-      alt="shopedoo"
+      alt="shopedoo — Ooredoo"
       width={width}
       height={height}
       className={cn('object-contain rounded-md w-auto max-w-full h-auto', imageClassName)}
@@ -35,19 +37,24 @@ function LogoImage({
 
 export function ShopEdooLogo({
   href,
-  height = 52,
+  height,
+  variant,
   className,
   imageClassName,
   suffix,
   priority,
 }: ShopEdooLogoProps) {
+  const preset = variant ? LOGO_VARIANTS[variant] : null;
+  const resolvedHeight = height ?? preset?.height ?? 52;
+  const resolvedImageClass = imageClassName ?? preset?.imageClassName;
+
   const logo = (
-    <LogoImage height={height} imageClassName={imageClassName} priority={priority} />
+    <LogoImage height={resolvedHeight} imageClassName={resolvedImageClass} priority={priority} />
   );
 
   if (href) {
     return (
-      <Link href={href} className={cn('flex items-center gap-2 shrink-0', className)}>
+      <Link href={href} className={cn('flex items-center gap-2 shrink-0 min-w-0', className)}>
         {logo}
         {suffix}
       </Link>
@@ -55,7 +62,7 @@ export function ShopEdooLogo({
   }
 
   return (
-    <div className={cn('flex items-center gap-2 shrink-0', className)}>
+    <div className={cn('flex items-center gap-2 shrink-0 min-w-0', className)}>
       {logo}
       {suffix}
     </div>

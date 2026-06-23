@@ -77,11 +77,7 @@ export default function Home() {
             <p className="text-lg sm:text-2xl md:text-3xl font-bold text-balance">
               Bienvenue sur
             </p>
-            <ShopEdooLogo
-              height={32}
-              className="justify-center mx-auto"
-              imageClassName="h-8 sm:h-11 md:h-14 w-auto max-w-[min(220px,78vw)] sm:max-w-[320px]"
-            />
+            <ShopEdooLogo variant="hero" className="justify-center mx-auto" />
             <p className="text-sm sm:text-lg text-muted-foreground text-balance max-w-2xl mx-auto px-2 pt-1">
               Découvrez nos produits télécom et services avec scan QR innovant
             </p>
@@ -145,7 +141,7 @@ export default function Home() {
         <footer className="bg-card border-t border-border mt-12 sm:mt-20 safe-bottom">
           <div className="page-container py-8 sm:py-12">
             <div className="flex flex-col items-center gap-3 text-muted-foreground text-sm">
-              <ShopEdooLogo height={36} />
+              <ShopEdooLogo variant="footer" />
               <p>&copy; 2024 shopedoo. Tous droits réservés.</p>
             </div>
           </div>

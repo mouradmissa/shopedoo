@@ -4,8 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
-import { Home, Package, ScanLine, LogOut } from 'lucide-react';
-import { ShopEdooLogo } from '@/components/brand/ShopEdooLogo';
+import { Home, Package, ScanLine } from 'lucide-react';
+import { AppHeader } from '@/components/layout/AppHeader';
 
 const navItems = [
   { href: '/caissier', label: 'Accueil', icon: Home, exact: true },
@@ -18,78 +18,50 @@ export function CashierNav() {
   const { user, logout } = useAuth();
   const router = useRouter();
 
-  const isActive = (href: string, exact?: boolean) =>
-    exact ? pathname === href : pathname.startsWith(href);
-
-  const handleLogout = () => {
-    logout();
-    router.push('/auth/signin');
-  };
-
   const roleLabel = user?.role === 'admin' ? 'Administrateur' : 'Caissier';
 
-  return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border safe-top">
-      <div className="page-container h-14 sm:h-16 flex items-center gap-2 sm:gap-4">
-        <ShopEdooLogo
-          href="/caissier"
-          height={32}
-          className="sm:hidden shrink min-w-0"
-          imageClassName="h-8 w-auto max-w-[100px]"
-        />
-        <ShopEdooLogo
-          href="/caissier"
-          height={44}
-          className="hidden sm:flex shrink-0"
-          imageClassName="h-11 w-auto"
-          suffix={
-            <span className="font-bold text-base hidden md:inline text-muted-foreground">Caisse</span>
-          }
-        />
+  const linkClass = (href: string, exact?: boolean, mobile?: boolean) => {
+    const active = exact ? pathname === href : pathname.startsWith(href);
+    return mobile
+      ? `shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap ${
+          active ? 'bg-primary text-primary-foreground' : 'bg-muted'
+        }`
+      : `flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap ${
+          active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+        }`;
+  };
 
-        <nav className="flex-1 flex items-center justify-center gap-1 sm:gap-2 min-w-0">
+  return (
+    <AppHeader
+      logoHref="/caissier"
+      sectionLabel="Caisse"
+      userName={user?.name}
+      userSubtitle={roleLabel}
+      onLogout={() => {
+        logout();
+        router.push('/auth/signin');
+      }}
+      center={
+        <nav className="flex items-center justify-center gap-1 sm:gap-2">
           {navItems.map(({ href, label, icon: Icon, exact }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap ${
-                isActive(href, exact)
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
+            <Link key={href} href={href} className={linkClass(href, exact)}>
               <Icon className="w-4 h-4 shrink-0" />
               <span className="hidden sm:inline">{label}</span>
             </Link>
           ))}
         </nav>
-
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-          <div className="hidden sm:block text-right text-sm">
-            <p className="font-medium leading-tight">{user?.name}</p>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 ml-auto"
-            >
-              <LogOut className="w-3 h-3" />
-              Déconnexion
-            </button>
-          </div>
-          <span className="hidden lg:block text-xs text-muted-foreground border-l border-border pl-4">
-            {roleLabel}
-          </span>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="sm:hidden p-2 hover:bg-muted rounded-lg transition"
-            title="Déconnexion"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
-    </header>
+      }
+      mobileNav={
+        <>
+          {navItems.map(({ href, label, icon: Icon, exact }) => (
+            <Link key={href} href={href} className={linkClass(href, exact, true)}>
+              <Icon className="w-3.5 h-3.5" />
+              {label}
+            </Link>
+          ))}
+        </>
+      }
+    />
   );
 }
 

@@ -10,11 +10,7 @@ export function InvoiceBrandHeader({ orderRef, status }: InvoiceBrandHeaderProps
     <div className="px-4 sm:px-5 py-4 border-b border-border bg-muted/40">
       <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
         <div className="flex flex-col items-center gap-1.5 sm:flex-row sm:items-center sm:gap-3 min-w-0 w-full sm:w-auto">
-          <ShopEdooLogo
-            height={32}
-            className="justify-center sm:justify-start shrink-0"
-            imageClassName="h-7 sm:h-10 w-auto max-w-[min(150px,68vw)] sm:max-w-[180px]"
-          />
+          <ShopEdooLogo variant="invoice" className="justify-center sm:justify-start shrink-0" />
           {orderRef && (
             <p className="text-xs text-muted-foreground font-mono text-center sm:text-left">
               #{orderRef}

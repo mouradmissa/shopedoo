@@ -6,7 +6,7 @@ import { apiClient } from '@/lib/api';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Camera, Loader2 } from 'lucide-react';
 import jsQR from 'jsqr';
-import { PageHeader } from '@/components/layout/PageHeader';
+import { PageTitleBar } from '@/components/layout/PageTitleBar';
 import { parseScannedQrData } from '@/lib/parseProductQr';
 
 export function QRScannerContent() {
@@ -137,15 +137,15 @@ export function QRScannerContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
-      <PageHeader
+    <>
+      <PageTitleBar
         title="Scanner QR"
         backHref="/"
         backLabel="Boutique"
-        icon={<Camera className="w-5 h-5 shrink-0" />}
+        icon={<Camera className="w-4 h-4 text-primary" />}
       />
 
-      <div className="page-container max-w-2xl py-6 sm:py-8">
+      <div className="page-container max-w-2xl py-6 sm:py-8 flex-1">
         {!isScanning ? (
           <div className="text-center py-10 sm:py-16">
             <div className="bg-card rounded-2xl border border-border p-6 sm:p-10">
@@ -205,6 +205,6 @@ export function QRScannerContent() {
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 }

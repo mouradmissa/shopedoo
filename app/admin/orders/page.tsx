@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { apiClient } from '@/lib/api';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Eye } from 'lucide-react';
+import { Loader2, Eye } from 'lucide-react';
+import { apiClient } from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
 
 interface Order {
@@ -13,137 +11,133 @@ interface Order {
   userId: { name: string; email: string };
   totalAmount: number;
   status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
+  paymentMethod?: string;
   createdAt: string;
-  items: any[];
+  items: unknown[];
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  all: 'Toutes',
+  pending: 'En attente',
+  paid: 'Payée',
+  shipped: 'Expédiée',
+  delivered: 'Livrée',
+  cancelled: 'Annulée',
+};
+
 const statusColors: Record<string, string> = {
-  pending: 'bg-yellow-500/10 text-yellow-600',
-  paid: 'bg-blue-500/10 text-blue-600',
-  shipped: 'bg-purple-500/10 text-purple-600',
-  delivered: 'bg-green-500/10 text-green-600',
+  pending: 'bg-amber-500/10 text-amber-700',
+  paid: 'bg-blue-500/10 text-blue-700',
+  shipped: 'bg-purple-500/10 text-purple-700',
+  delivered: 'bg-green-500/10 text-green-700',
   cancelled: 'bg-red-500/10 text-red-600',
 };
 
 export default function AdminOrdersPage() {
-  const { user } = useAuth();
-  const router = useRouter();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
-    if (user?.role !== 'admin') {
-      router.push('/');
-      return;
-    }
-    fetchOrders();
-  }, [user, router, statusFilter]);
+    void fetchOrders();
+  }, [statusFilter]);
 
   const fetchOrders = async () => {
+    setIsLoading(true);
     const response = await apiClient.getAllOrders(statusFilter === 'all' ? undefined : statusFilter);
-    if (response.success) {
-      setOrders(response.data || []);
-    }
+    if (response.success) setOrders(response.data || []);
     setIsLoading(false);
   };
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     const response = await apiClient.updateOrderStatus(orderId, newStatus);
-    if (response.success) {
+    if (response.success && response.data) {
       setOrders(orders.map((o) => (o._id === orderId ? response.data : o)));
-      alert('Order status updated!');
     }
   };
 
-  const getStatusBadgeClass = (status: string) => statusColors[status] || 'bg-gray-500/10 text-gray-600';
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/admin" className="flex items-center gap-2 hover:opacity-75 transition">
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-semibold hidden sm:inline">Back</span>
-          </Link>
-          <h1 className="font-bold text-xl">Orders Management</h1>
-          <div className="w-20"></div>
-        </div>
+    <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Commandes</h1>
+        <p className="text-sm text-muted-foreground mt-1">Suivi et mise à jour des commandes clients</p>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Status Filter */}
-        <div className="flex gap-2 overflow-x-auto pb-4 mb-8">
-          {['all', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status)}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap font-medium transition ${
-                statusFilter === status
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-card text-foreground hover:bg-muted border border-border'
-              }`}
-            >
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </button>
-          ))}
-        </div>
+      <div className="mobile-scroll-x mb-6">
+        {(['all', 'pending', 'paid', 'shipped', 'delivered', 'cancelled'] as const).map((status) => (
+          <button
+            key={status}
+            type="button"
+            onClick={() => setStatusFilter(status)}
+            className={`shrink-0 px-4 py-2 rounded-lg whitespace-nowrap text-sm font-medium transition min-h-10 ${
+              statusFilter === status
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-card border border-border hover:bg-muted'
+            }`}
+          >
+            {STATUS_LABELS[status]}
+          </button>
+        ))}
+      </div>
 
-        {/* Orders Table */}
-        {isLoading ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Loading orders...</p>
-          </div>
-        ) : orders.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No orders found</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
+      {isLoading ? (
+        <div className="flex justify-center py-16">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      ) : orders.length === 0 ? (
+        <p className="text-center text-muted-foreground py-16">Aucune commande trouvée.</p>
+      ) : (
+        <>
+          <div className="hidden md:block overflow-x-auto bg-card border border-border rounded-xl">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-4 px-4 font-semibold">Order ID</th>
-                  <th className="text-left py-4 px-4 font-semibold">Customer</th>
-                  <th className="text-left py-4 px-4 font-semibold">Items</th>
-                  <th className="text-left py-4 px-4 font-semibold">Amount</th>
-                  <th className="text-left py-4 px-4 font-semibold">Status</th>
-                  <th className="text-left py-4 px-4 font-semibold">Date</th>
-                  <th className="text-left py-4 px-4 font-semibold">Actions</th>
+                <tr className="border-b border-border bg-muted/40">
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Réf.</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Client</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Articles</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Montant</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Statut</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Date</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Voir</th>
                 </tr>
               </thead>
               <tbody>
                 {orders.map((order) => (
-                  <tr key={order._id} className="border-b border-border hover:bg-muted/50 transition">
-                    <td className="py-4 px-4 font-mono text-sm">{order._id.slice(0, 8)}...</td>
-                    <td className="py-4 px-4">
-                      <div>
-                        <p className="font-semibold">{order.userId?.name}</p>
-                        <p className="text-xs text-muted-foreground">{order.userId?.email}</p>
-                      </div>
+                  <tr key={order._id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                    <td className="py-3 px-4 font-mono text-xs">#{order._id.slice(-8).toUpperCase()}</td>
+                    <td className="py-3 px-4">
+                      <p className="font-medium text-sm">{order.userId?.name}</p>
+                      <p className="text-xs text-muted-foreground">{order.userId?.email}</p>
                     </td>
-                    <td className="py-4 px-4 text-sm">{order.items?.length || 0} items</td>
-                    <td className="py-4 px-4 font-bold text-primary">{formatPrice(order.totalAmount)}</td>
-                    <td className="py-4 px-4">
+                    <td className="py-3 px-4 text-sm">{order.items?.length || 0}</td>
+                    <td className="py-3 px-4 font-semibold text-primary text-sm">
+                      {formatPrice(order.totalAmount)}
+                    </td>
+                    <td className="py-3 px-4">
                       <select
                         value={order.status}
                         onChange={(e) => updateOrderStatus(order._id, e.target.value)}
-                        className={`text-sm px-3 py-1 rounded-full font-medium border border-current cursor-pointer ${getStatusBadgeClass(order.status)}`}
+                        className={`text-xs px-2 py-1 rounded-full font-medium border border-transparent cursor-pointer ${statusColors[order.status]}`}
                       >
-                        <option value="pending">Pending</option>
-                        <option value="paid">Paid</option>
-                        <option value="shipped">Shipped</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="cancelled">Cancelled</option>
+                        {Object.entries(STATUS_LABELS)
+                          .filter(([k]) => k !== 'all')
+                          .map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
                       </select>
                     </td>
-                    <td className="py-4 px-4 text-sm">
-                      {new Date(order.createdAt).toLocaleDateString()}
+                    <td className="py-3 px-4 text-xs text-muted-foreground">
+                      {new Date(order.createdAt).toLocaleDateString('fr-TN')}
                     </td>
-                    <td className="py-4 px-4">
-                      <Link href={`/admin/orders/${order._id}`} className="p-2 hover:bg-muted rounded-lg transition">
-                        <Eye className="w-5 h-5 text-secondary" />
+                    <td className="py-3 px-4">
+                      <Link
+                        href={`/admin/orders/${order._id}`}
+                        className="inline-flex p-2 hover:bg-muted rounded-lg transition"
+                        title="Voir le détail"
+                      >
+                        <Eye className="w-4 h-4 text-primary" />
                       </Link>
                     </td>
                   </tr>
@@ -151,8 +145,49 @@ export default function AdminOrdersPage() {
               </tbody>
             </table>
           </div>
-        )}
-      </div>
+
+          <div className="md:hidden space-y-3">
+            {orders.map((order) => (
+              <article key={order._id} className="bg-card border border-border rounded-xl p-4">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div>
+                    <p className="font-mono text-xs text-muted-foreground">
+                      #{order._id.slice(-8).toUpperCase()}
+                    </p>
+                    <p className="font-semibold">{order.userId?.name}</p>
+                    <p className="text-xs text-muted-foreground">{order.userId?.email}</p>
+                  </div>
+                  <p className="font-bold text-primary">{formatPrice(order.totalAmount)}</p>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>{order.items?.length || 0} article(s)</span>
+                  <span>{new Date(order.createdAt).toLocaleDateString('fr-TN')}</span>
+                </div>
+                <select
+                  value={order.status}
+                  onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                  className={`mt-3 w-full text-sm px-3 py-2 rounded-lg font-medium ${statusColors[order.status]}`}
+                >
+                  {Object.entries(STATUS_LABELS)
+                    .filter(([k]) => k !== 'all')
+                    .map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                </select>
+                <Link
+                  href={`/admin/orders/${order._id}`}
+                  className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary font-medium"
+                >
+                  <Eye className="w-4 h-4" />
+                  Voir le détail
+                </Link>
+              </article>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

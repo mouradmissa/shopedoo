@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft,
   Banknote,
   CheckCircle2,
   CreditCard,
@@ -19,7 +18,7 @@ import { formatPrice } from '@/lib/currency';
 import { buildInvoiceQrString } from '@/lib/invoiceQr';
 import { InvoiceQrImage } from '@/components/checkout/InvoiceQrImage';
 import { InvoiceBrandHeader } from '@/components/checkout/InvoiceBrandHeader';
-import { ShopEdooLogo } from '@/components/brand/ShopEdooLogo';
+import { PageTitleBar } from '@/components/layout/PageTitleBar';
 
 interface CartItem {
   productId: {
@@ -161,7 +160,7 @@ export default function CheckoutPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-card">
+      <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -169,8 +168,10 @@ export default function CheckoutPage() {
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-card flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
+      <>
+        <PageTitleBar title="Commande" backHref="/cart" backLabel="Panier" />
+        <div className="flex items-center justify-center px-4 py-16 flex-1">
+          <div className="text-center max-w-md">
           <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
           <h1 className="text-2xl font-bold mb-2">Panier vide</h1>
           <p className="text-muted-foreground mb-6">Ajoutez des produits avant de passer commande.</p>
@@ -180,8 +181,9 @@ export default function CheckoutPage() {
           >
             Continuer vos achats
           </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -189,8 +191,9 @@ export default function CheckoutPage() {
     const isCashRegister = order.paymentMethod === 'cash_register';
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
-        <div className="max-w-2xl mx-auto px-4 sm:px-0 py-6 sm:py-10">
+      <>
+        <PageTitleBar title="Confirmation" backHref="/" backLabel="Boutique" />
+        <div className="page-container py-6 sm:py-10 flex-1">
           <div className="bg-card border border-border rounded-2xl shadow-lg overflow-hidden">
             <InvoiceBrandHeader
               orderRef={order._id.slice(-8).toUpperCase()}
@@ -262,35 +265,20 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border safe-top">
-        <div className="page-container h-14 sm:h-16 flex items-center justify-between gap-2">
-          <Link href="/cart" className="flex items-center gap-2 hover:opacity-75 transition min-w-0">
-            <ArrowLeft className="w-5 h-5 shrink-0" />
-            <span className="font-semibold hidden sm:inline truncate">Retour au panier</span>
-          </Link>
-          <ShopEdooLogo
-            href="/"
-            height={32}
-            className="sm:hidden shrink min-w-0"
-            imageClassName="h-8 w-auto max-w-[110px]"
-          />
-          <ShopEdooLogo
-            href="/"
-            height={44}
-            className="hidden sm:flex"
-            imageClassName="h-11 w-auto"
-          />
-          <div className="w-10 sm:w-24" />
-        </div>
-      </div>
+    <>
+      <PageTitleBar
+        title="Finaliser la commande"
+        backHref="/cart"
+        backLabel="Panier"
+        icon={<CreditCard className="w-4 h-4 text-primary" />}
+      />
 
-      <div className="page-container py-6 sm:py-8">
+      <div className="page-container py-6 sm:py-8 flex-1">
         <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Finaliser la commande</h1>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -410,6 +398,6 @@ export default function CheckoutPage() {
           </div>
         </form>
       </div>
-    </div>
+    </>
   );
 }

@@ -5,7 +5,6 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Mail, Lock, LogIn } from 'lucide-react';
-import { ShopEdooLogo } from '@/components/brand/ShopEdooLogo';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
@@ -39,83 +38,72 @@ export default function SignInPage() {
         router.push('/');
       }
     } catch (err: any) {
-      setError(err.message || 'Sign in failed. Please try again.');
+      setError(err.message || 'Échec de la connexion. Réessayez.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-2xl border border-border p-8 shadow-lg">
-          {/* Header */}
-          <div className="mb-8">
-            <ShopEdooLogo
-              href="/"
-              height={48}
-              className="mb-6 justify-center w-full"
-              imageClassName="h-10 sm:h-14 w-auto max-w-[min(240px,80vw)]"
-            />
-            <h1 className="text-3xl font-bold mb-2 text-center">Welcome Back</h1>
-            <p className="text-muted-foreground text-center">Connectez-vous à votre compte shopedoo</p>
+    <div className="w-full max-w-md">
+      <div className="bg-card rounded-2xl border border-border p-6 sm:p-8 shadow-lg">
+        <div className="mb-6 sm:mb-8 text-center">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Connexion</h1>
+          <p className="text-muted-foreground text-sm">Accédez à votre compte shopedoo</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {error && (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+              {error}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="vous@exemple.com"
+                required
+                className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                  className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-              </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Mot de passe</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
             </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <LogIn className="w-5 h-5" />
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </button>
-          </form>
-
-          {/* Footer */}
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
-            <Link href="/auth/signup" className="text-primary hover:underline font-semibold">
-              Sign up
-            </Link>
           </div>
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full min-h-12 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            <LogIn className="w-5 h-5" />
+            {isLoading ? 'Connexion...' : 'Se connecter'}
+          </button>
+        </form>
+
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          Pas de compte ?{' '}
+          <Link href="/auth/signup" className="text-primary hover:underline font-semibold">
+            Créer un compte
+          </Link>
         </div>
       </div>
     </div>
