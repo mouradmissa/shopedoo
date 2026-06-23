@@ -168,6 +168,22 @@ export default function AdminDashboard() {
           <div className="bg-card rounded-xl border border-border p-8">
             <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
               <Users className="w-6 h-6 text-primary" />
+              Boutiques
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Créer des boutiques en Tunisie et assigner un gérant à chacune
+            </p>
+            <Link
+              href="/admin/stores"
+              className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition"
+            >
+              Gérer les boutiques
+            </Link>
+          </div>
+
+          <div className="bg-card rounded-xl border border-border p-8">
+            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <Users className="w-6 h-6 text-primary" />
               Users
             </h2>
             <p className="text-muted-foreground mb-6">View customer profiles and manage user accounts</p>

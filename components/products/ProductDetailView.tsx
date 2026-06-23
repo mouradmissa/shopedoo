@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Package, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPin, Package, ShoppingCart } from 'lucide-react';
 import { formatCategory } from '@/lib/productCategories';
 import { formatPrice } from '@/lib/currency';
 import { ProductQrDisplay } from '@/components/products/ProductQrDisplay';
@@ -42,8 +42,10 @@ export function ProductDetailView({
   canAddToCart = true,
   isAdding = false,
 }: ProductDetailViewProps) {
-  const stock = stockInfo(product.stock);
+  const totalStock = product.totalStock ?? product.stock;
+  const stock = stockInfo(totalStock);
   const showCustomerCta = variant === 'customer' && onAddToCart;
+  const storeRows = product.storeAvailability ?? [];
 
   return (
     <div className={`flex-1 page-container py-4 sm:py-6 ${showCustomerCta ? 'pb-28 sm:pb-6' : ''}`}>
@@ -66,7 +68,7 @@ export function ProductDetailView({
           ) : (
             <Package className="w-16 h-16 text-muted-foreground" />
           )}
-          {product.stock === 0 && (
+          {product.stock === 0 && totalStock === 0 && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
               <p className="text-white font-semibold text-base sm:text-lg px-4 text-center">
                 Rupture de stock
@@ -101,6 +103,36 @@ export function ProductDetailView({
             </p>
           </div>
 
+          {storeRows.length > 0 && variant === 'customer' && (
+            <div className="rounded-xl border border-border bg-card p-4">
+              <h2 className="font-semibold mb-3 flex items-center gap-2 text-sm sm:text-base">
+                <MapPin className="w-4 h-4 text-primary" />
+                Disponibilité par boutique (Tunisie)
+              </h2>
+              <ul className="divide-y divide-border">
+                {storeRows.map((row) => (
+                  <li key={row.storeId} className="py-2.5 flex items-center justify-between gap-3 text-sm">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{row.storeName}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {row.city} — {row.governorate}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 text-xs font-semibold px-2 py-1 rounded-full ${
+                        row.stock > 0
+                          ? 'bg-green-500/10 text-green-700'
+                          : 'bg-red-500/10 text-red-600'
+                      }`}
+                    >
+                      {row.stock > 0 ? `${row.stock} en stock` : 'Rupture'}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {(product.qrCode || product.qrCodeImage) && (
             <ProductQrDisplay
               qrCode={product.qrCode}
@@ -115,7 +147,7 @@ export function ProductDetailView({
             <button
               type="button"
               onClick={onAddToCart}
-              disabled={product.stock === 0 || !canAddToCart || isAdding}
+              disabled={totalStock === 0 || !canAddToCart || isAdding}
               className="hidden sm:flex w-full sm:w-auto min-h-11 px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed items-center justify-center gap-2"
             >
               {isAdding ? (

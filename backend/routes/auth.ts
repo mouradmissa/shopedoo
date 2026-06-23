@@ -1,5 +1,6 @@
 import express, { Router, Response } from 'express';
 import User, { IUser } from '../models/User';
+import Store from '../models/Store';
 import { generateToken } from '../utils/jwt';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 
@@ -38,6 +39,7 @@ router.post('/signup', async (req: express.Request, res: Response): Promise<void
       userId: String(user._id),
       email: user.email,
       role: user.role,
+      storeId: user.storeId ? String(user.storeId) : undefined,
     });
 
     res.status(201).json({
@@ -47,6 +49,7 @@ router.post('/signup', async (req: express.Request, res: Response): Promise<void
         email: user.email,
         name: user.name,
         role: user.role,
+        storeId: user.storeId,
       },
     });
   } catch (error) {
@@ -79,7 +82,15 @@ router.post('/signin', async (req: express.Request, res: Response): Promise<void
       userId: String(user._id),
       email: user.email,
       role: user.role,
+      storeId: user.storeId ? String(user.storeId) : undefined,
     });
+
+    let store = null;
+    if (user.role === 'manager') {
+      store = await Store.findOne({ managerId: user._id }).select('name city governorate address');
+    } else if (user.storeId) {
+      store = await Store.findById(user.storeId).select('name city governorate address');
+    }
 
     res.json({
       token,
@@ -88,6 +99,8 @@ router.post('/signin', async (req: express.Request, res: Response): Promise<void
         email: user.email,
         name: user.name,
         role: user.role,
+        storeId: user.storeId,
+        store,
       },
     });
   } catch (error) {
@@ -98,7 +111,28 @@ router.post('/signin', async (req: express.Request, res: Response): Promise<void
 router.get('/me', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const user = await User.findById(req.user?.userId).select('-password');
-    res.json(user);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    let store = null;
+    if (user.role === 'manager') {
+      store = await Store.findOne({ managerId: user._id }).select('name city governorate address _id');
+    } else if (user.storeId) {
+      store = await Store.findById(user.storeId).select('name city governorate address _id');
+    }
+
+    res.json({
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      storeId: user.storeId,
+      phone: user.phone,
+      address: user.address,
+      store,
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch user' });
   }

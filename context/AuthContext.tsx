@@ -7,7 +7,15 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'cashier' | 'customer';
+  role: 'admin' | 'manager' | 'cashier' | 'customer';
+  storeId?: string;
+  store?: {
+    _id?: string;
+    name: string;
+    city: string;
+    governorate: string;
+    address?: string;
+  };
 }
 
 interface AuthContextType {
@@ -33,7 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
           const response = await apiClient.getMe();
           if (response.success && response.data) {
-            setUser(response.data);
+            const data = response.data as User & { _id?: string };
+            setUser({
+              id: String(data.id || data._id),
+              email: data.email,
+              name: data.name,
+              role: data.role,
+              storeId: data.storeId ? String(data.storeId) : undefined,
+              store: data.store,
+            });
           } else {
             apiClient.clearToken();
           }

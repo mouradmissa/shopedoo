@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IProduct extends Document {
   name: string;
@@ -7,6 +7,7 @@ export interface IProduct extends Document {
   category: string;
   stock: number;
   image: string;
+  storeId?: Types.ObjectId;
   qrCode: string;
   qrCodeImage?: string;
   qrCodePayload?: string;
@@ -22,6 +23,7 @@ const productSchema = new Schema<IProduct>(
     category: { type: String, required: true },
     stock: { type: Number, required: true, default: 0, min: 0 },
     image: String,
+    storeId: { type: Schema.Types.ObjectId, ref: 'Store' },
     qrCode: { type: String, unique: true, sparse: true },
     qrCodeImage: String,
     qrCodePayload: String,
@@ -30,6 +32,7 @@ const productSchema = new Schema<IProduct>(
 );
 
 productSchema.index({ category: 1, name: 1 });
+productSchema.index({ storeId: 1, name: 1 });
 productSchema.index({ qrCode: 1 });
 
 export default mongoose.model<IProduct>('Product', productSchema);

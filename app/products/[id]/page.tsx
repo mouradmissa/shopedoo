@@ -27,7 +27,15 @@ export default function ProductDetailPage() {
       setLoading(true);
       const response = await apiClient.getProduct(id);
       if (response.success && response.data) {
-        setProduct(response.data);
+        const data = response.data as ProductItem & {
+          totalStock?: number;
+          storeAvailability?: ProductItem['storeAvailability'];
+        };
+        setProduct({
+          ...data,
+          stock: data.totalStock ?? data.stock ?? 0,
+          storeAvailability: data.storeAvailability,
+        });
         setError('');
       } else {
         setError(response.error || 'Produit introuvable');
@@ -89,7 +97,7 @@ export default function ProductDetailPage() {
             backLabel="Retour à la boutique"
             variant="customer"
             onAddToCart={addToCart}
-            canAddToCart={product.stock > 0}
+            canAddToCart={(product.totalStock ?? product.stock) > 0}
             isAdding={isAdding}
           />
         )}

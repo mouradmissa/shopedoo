@@ -6,6 +6,7 @@ import authRoutes from './routes/auth';
 import productRoutes from './routes/products';
 import cartRoutes from './routes/cart';
 import orderRoutes from './routes/orders';
+import storeRoutes from './routes/stores';
 import paymentRoutes from './routes/payment';
 
 dotenv.config({ path: 'backend/.env' });
@@ -34,6 +35,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/stores', storeRoutes);
 app.use('/api/payment', paymentRoutes);
 
 // Health check

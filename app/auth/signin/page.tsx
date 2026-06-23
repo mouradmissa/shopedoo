@@ -31,6 +31,8 @@ export default function SignInPage() {
         router.push(redirect);
       } else if (loggedUser.role === 'cashier') {
         router.push('/caissier');
+      } else if (loggedUser.role === 'manager') {
+        router.push('/manager');
       } else if (loggedUser.role === 'admin') {
         router.push('/admin');
       } else {

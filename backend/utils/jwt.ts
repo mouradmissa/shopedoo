@@ -1,9 +1,12 @@
 import jwt from 'jsonwebtoken';
 
-interface TokenPayload {
+export type AppRole = 'admin' | 'manager' | 'cashier' | 'customer';
+
+export interface TokenPayload {
   userId: string;
   email: string;
-  role: 'admin' | 'cashier' | 'customer';
+  role: AppRole;
+  storeId?: string;
 }
 
 const JWT_SECRET = process.env.JWT_SECRET || 'default_secret_key';

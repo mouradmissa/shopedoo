@@ -107,11 +107,21 @@ class ApiClient {
   }
 
   // Products endpoints
-  async getProducts(category?: string, search?: string) {
+  async getProductCatalog(category?: string, search?: string) {
+    let url = '/products/catalog/list';
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (search) params.append('search', search);
+    if (params.toString()) url += `?${params.toString()}`;
+    return this.request(url, 'GET');
+  }
+
+  async getProducts(category?: string, search?: string, storeId?: string) {
     let url = '/products';
     const params = new URLSearchParams();
     if (category) params.append('category', category);
     if (search) params.append('search', search);
+    if (storeId) params.append('storeId', storeId);
     if (params.toString()) url += `?${params.toString()}`;
     return this.request(url, 'GET');
   }
@@ -191,6 +201,47 @@ class ApiClient {
 
   async confirmCashPayment(qrCode: string) {
     return this.request('/orders/cashier/invoice/confirm', 'POST', { invoiceQrCode: qrCode });
+  }
+
+  // Stores endpoints
+  async getPublicStores() {
+    return this.request('/stores/public', 'GET');
+  }
+
+  async getStores() {
+    return this.request('/stores', 'GET');
+  }
+
+  async getMyStore() {
+    return this.request('/stores/my', 'GET');
+  }
+
+  async createStore(data: {
+    name: string;
+    city: string;
+    governorate: string;
+    address: string;
+    manager: { name: string; email: string; password: string; phone?: string };
+  }) {
+    return this.request('/stores', 'POST', data);
+  }
+
+  async updateStore(
+    id: string,
+    data: Partial<{ name: string; city: string; governorate: string; address: string; isActive: boolean }>
+  ) {
+    return this.request(`/stores/${id}`, 'PUT', data);
+  }
+
+  async getStoreCashiers(storeId: string) {
+    return this.request(`/stores/${storeId}/cashiers`, 'GET');
+  }
+
+  async createCashier(
+    storeId: string,
+    data: { name: string; email: string; password: string; phone?: string }
+  ) {
+    return this.request(`/stores/${storeId}/cashiers`, 'POST', data);
   }
 }
 

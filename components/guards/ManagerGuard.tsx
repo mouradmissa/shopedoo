@@ -3,21 +3,16 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { canAccessShop } from '@/lib/roles';
 import { Loader2 } from 'lucide-react';
 
-export function CustomerGuard({ children }: { children: React.ReactNode }) {
+export function ManagerGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (isLoading) return;
-    if (isAuthenticated && user && !canAccessShop(user.role)) {
-      if (user.role === 'manager') {
-        router.replace('/manager');
-      } else {
-        router.replace('/caissier');
-      }
+    if (!isAuthenticated || user?.role !== 'manager') {
+      router.replace('/auth/signin');
     }
   }, [user, isLoading, isAuthenticated, router]);
 
@@ -29,7 +24,7 @@ export function CustomerGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (isAuthenticated && user && !canAccessShop(user.role)) {
+  if (!isAuthenticated || user?.role !== 'manager') {
     return null;
   }
 

@@ -28,9 +28,13 @@ export default function Home() {
 
   const fetchProducts = async () => {
     setProductsLoading(true);
-    const response = await apiClient.getProducts(category === 'all' ? undefined : category);
+    const response = await apiClient.getProductCatalog(category === 'all' ? undefined : category);
     if (response.success) {
-      setProducts(response.data || []);
+      const items = (response.data || []).map((item: any) => ({
+        ...item,
+        stock: item.totalStock ?? item.stock ?? 0,
+      }));
+      setProducts(items);
     }
     setProductsLoading(false);
   };
