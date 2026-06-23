@@ -12,6 +12,8 @@ export interface ProductItem {
   category: string;
   stock: number;
   image?: string;
+  qrCode?: string;
+  qrCodeImage?: string;
 }
 
 interface ProductCardProps {

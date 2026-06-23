@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, Loader2, Package, ShoppingCart } from 'lucide-react';
 import { formatCategory } from '@/lib/productCategories';
 import { formatPrice } from '@/lib/currency';
+import { ProductQrDisplay } from '@/components/products/ProductQrDisplay';
 import type { ProductItem } from './ProductCard';
 
 interface ProductDetailViewProps {
@@ -99,6 +100,15 @@ export function ProductDetailView({
               {product.description}
             </p>
           </div>
+
+          {(product.qrCode || product.qrCodeImage) && (
+            <ProductQrDisplay
+              qrCode={product.qrCode}
+              qrCodeImage={product.qrCodeImage}
+              productName={product.name}
+              productId={product._id}
+            />
+          )}
 
           {showCustomerCta && (
             <button

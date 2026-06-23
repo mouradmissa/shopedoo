@@ -2,6 +2,7 @@ import express, { Router, Response } from 'express';
 import Product from '../models/Product';
 import QRCode from '../models/QRCode';
 import { authMiddleware, adminMiddleware, AuthRequest } from '../middleware/auth';
+import { generateProductQrImage, ensureProductQrImage } from '../utils/productQr';
 import { v4 as uuidv4 } from 'uuid';
 
 const router: Router = express.Router();
@@ -20,10 +21,36 @@ router.get('/', async (req: express.Request, res: Response): Promise<void> => {
       ];
     }
 
-    const products = await Product.find(filter).select('-__v');
+    const products = await Product.find(filter).select('-__v -qrCodeImage');
     res.json(products);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch products' });
+  }
+});
+
+// Image QR produit (PNG)
+router.get('/:id/qr-image', async (req: express.Request, res: Response): Promise<void> => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
+    await ensureProductQrImage(product);
+    if (!product.qrCodeImage) {
+      res.status(404).json({ error: 'QR image not available' });
+      return;
+    }
+
+    const base64 = product.qrCodeImage.replace(/^data:image\/png;base64,/, '');
+    const buffer = Buffer.from(base64, 'base64');
+
+    res.set('Content-Type', 'image/png');
+    res.set('Content-Disposition', `inline; filename="qr-${product.qrCode}.png"`);
+    res.send(buffer);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch QR image' });
   }
 });
 
@@ -35,6 +62,8 @@ router.get('/:id', async (req: express.Request, res: Response): Promise<void> =>
       res.status(404).json({ error: 'Product not found' });
       return;
     }
+
+    await ensureProductQrImage(product);
     res.json(product);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch product' });
@@ -83,16 +112,18 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: 
 
     await product.save();
 
-    // Generate QR code for product
+    const code = `SHOPEDOO-${uuidv4()}`;
+    const qrCodeImage = await generateProductQrImage(code);
+
     const qrCode = new QRCode({
       productId: product._id,
-      code: `SHOPEDOO-${uuidv4()}`,
+      code,
     });
 
     await qrCode.save();
 
-    // Update product with QR code reference
-    product.qrCode = qrCode.code;
+    product.qrCode = code;
+    product.qrCodeImage = qrCodeImage;
     await product.save();
 
     res.status(201).json(product);

@@ -5,8 +5,9 @@ import { useAuth } from '@/context/AuthContext';
 import { apiClient } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Plus, Edit2, Trash2, QrCode } from 'lucide-react';
+import { ArrowLeft, Plus, Edit2, Trash2, X } from 'lucide-react';
 import { formatPrice } from '@/lib/currency';
+import { ProductQrDisplay } from '@/components/products/ProductQrDisplay';
 
 interface Product {
   _id: string;
@@ -17,6 +18,7 @@ interface Product {
   stock: number;
   image?: string;
   qrCode: string;
+  qrCodeImage?: string;
 }
 
 export default function AdminProductsPage() {
@@ -25,6 +27,8 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [qrProduct, setQrProduct] = useState<Product | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -78,6 +82,17 @@ export default function AdminProductsPage() {
         setProducts(products.filter((p) => p._id !== productId));
         alert('Product deleted successfully!');
       }
+    }
+  };
+
+  const viewQrCode = async (productId: string) => {
+    setQrLoading(true);
+    const response = await apiClient.getProduct(productId);
+    setQrLoading(false);
+    if (response.success && response.data) {
+      setQrProduct(response.data);
+    } else {
+      alert('Impossible de charger le QR code');
     }
   };
 
@@ -226,10 +241,17 @@ export default function AdminProductsPage() {
                       </span>
                     </td>
                     <td className="py-4 px-4">
-                      <div className="flex items-center gap-1 text-xs">
-                        <QrCode className="w-4 h-4" />
-                        <span className="truncate">{product.qrCode}</span>
-                      </div>
+                      {product.qrCode ? (
+                        <button
+                          type="button"
+                          onClick={() => viewQrCode(product._id)}
+                          className="text-xs font-medium text-primary hover:underline"
+                        >
+                          Voir QR
+                        </button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </td>
                     <td className="py-4 px-4 flex gap-2">
                       <Link
@@ -252,6 +274,39 @@ export default function AdminProductsPage() {
           </div>
         )}
       </div>
+
+      {(qrProduct || qrLoading) && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={() => !qrLoading && setQrProduct(null)}
+        >
+          <div
+            className="bg-card border border-border rounded-2xl p-5 sm:p-6 max-w-sm w-full shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-lg truncate pr-2">{qrProduct?.name || 'QR produit'}</h3>
+              <button
+                type="button"
+                onClick={() => setQrProduct(null)}
+                className="touch-target hover:bg-muted rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            {qrLoading ? (
+              <p className="text-center text-muted-foreground py-8">Chargement...</p>
+            ) : qrProduct ? (
+              <ProductQrDisplay
+                qrCode={qrProduct.qrCode}
+                qrCodeImage={qrProduct.qrCodeImage}
+                productName={qrProduct.name}
+                productId={qrProduct._id}
+              />
+            ) : null}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
