@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { formatPrice } from '@/lib/currency';
 import type { CashierInvoiceView } from '@/lib/invoiceQr';
-import { ShopEdooLogo } from '@/components/brand/ShopEdooLogo';
+import { InvoiceBrandHeader } from '@/components/checkout/InvoiceBrandHeader';
 
 function paymentLabel(method: string) {
   if (method === 'cash_register') return 'Paiement à la caisse';
@@ -84,25 +84,7 @@ export function CashierInvoiceDisplay({
 
           {/* Facture détaillée */}
           <article className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-border bg-muted/40">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <ShopEdooLogo height={44} />
-                  <div>
-                    <p className="text-xs text-muted-foreground font-mono">#{orderRef}</p>
-                  </div>
-                </div>
-                <span
-                  className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold ${
-                    isPaid
-                      ? 'bg-green-500/15 text-green-700 border border-green-500/30'
-                      : 'bg-amber-500/15 text-amber-800 border border-amber-500/30'
-                  }`}
-                >
-                  {isPaid ? 'PAYÉE' : 'EN ATTENTE'}
-                </span>
-              </div>
-            </div>
+            <InvoiceBrandHeader orderRef={orderRef} status={isPaid ? 'paid' : 'pending'} />
 
             <div className="px-5 py-4 space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

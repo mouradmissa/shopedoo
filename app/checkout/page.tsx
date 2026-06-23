@@ -18,6 +18,7 @@ import { apiClient } from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
 import { buildInvoiceQrString } from '@/lib/invoiceQr';
 import { InvoiceQrImage } from '@/components/checkout/InvoiceQrImage';
+import { InvoiceBrandHeader } from '@/components/checkout/InvoiceBrandHeader';
 import { ShopEdooLogo } from '@/components/brand/ShopEdooLogo';
 
 interface CartItem {
@@ -189,66 +190,75 @@ export default function CheckoutPage() {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
-        <div className="max-w-2xl mx-auto px-4 sm:px-0 py-8 sm:py-10">
-          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-lg text-center">
-            <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2">Commande confirmée</h1>
-            <p className="text-muted-foreground mb-6">
-              Référence #{order._id.slice(-8).toUpperCase()}
-            </p>
+        <div className="max-w-2xl mx-auto px-4 sm:px-0 py-6 sm:py-10">
+          <div className="bg-card border border-border rounded-2xl shadow-lg overflow-hidden">
+            <InvoiceBrandHeader
+              orderRef={order._id.slice(-8).toUpperCase()}
+              status={isCashRegister ? 'pending' : undefined}
+            />
 
-            <div className="rounded-xl bg-muted/50 border border-border p-4 mb-6 text-left space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Total</span>
-                <span className="font-bold text-primary">{formatPrice(order.totalAmount)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Paiement</span>
-                <span>
-                  {order.paymentMethod === 'cash_register'
-                    ? 'À la caisse'
-                    : order.paymentMethod === 'cash_delivery'
-                      ? 'Espèces à la livraison'
-                      : 'En ligne'}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Adresse</span>
-                <span className="text-right max-w-[60%]">{order.shippingAddress}</span>
-              </div>
-            </div>
-
-            {isCashRegister && invoiceQrValue && (
-              <div className="mb-6">
-                <p className="font-semibold mb-3">Présentez ce QR code au caissier</p>
-                <div className="flex justify-center mb-3">
-                  <InvoiceQrImage value={invoiceQrValue} />
-                </div>
-                <p className="text-xs text-muted-foreground break-all">{order.invoiceQrCode}</p>
-              </div>
-            )}
-
-            {!isCashRegister && (
-              <p className="text-sm text-muted-foreground mb-6">
-                Votre commande est enregistrée. Vous serez contacté pour la livraison.
+            <div className="p-5 sm:p-8 text-center">
+              <CheckCircle2 className="w-14 h-14 sm:w-16 sm:h-16 text-green-600 mx-auto mb-4" />
+              <h1 className="text-xl sm:text-3xl font-bold mb-2">Commande confirmée</h1>
+              <p className="text-muted-foreground text-sm sm:text-base mb-6">
+                {isCashRegister
+                  ? 'Présentez cette facture au caissier pour régler votre commande.'
+                  : `Référence #${order._id.slice(-8).toUpperCase()}`}
               </p>
-            )}
 
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/"
-                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition"
-              >
-                Retour à la boutique
-              </Link>
-              {isCashRegister && (
-                <Link
-                  href="/cart"
-                  className="px-6 py-3 border border-border rounded-lg font-semibold hover:bg-muted transition"
-                >
-                  Voir le panier
-                </Link>
+              <div className="rounded-xl bg-muted/50 border border-border p-4 mb-6 text-left space-y-2">
+                <div className="flex justify-between text-sm gap-3">
+                  <span className="text-muted-foreground shrink-0">Total</span>
+                  <span className="font-bold text-primary text-right">{formatPrice(order.totalAmount)}</span>
+                </div>
+                <div className="flex justify-between text-sm gap-3">
+                  <span className="text-muted-foreground shrink-0">Paiement</span>
+                  <span className="text-right">
+                    {order.paymentMethod === 'cash_register'
+                      ? 'À la caisse'
+                      : order.paymentMethod === 'cash_delivery'
+                        ? 'Espèces à la livraison'
+                        : 'En ligne'}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm gap-3">
+                  <span className="text-muted-foreground shrink-0">Adresse</span>
+                  <span className="text-right max-w-[65%] break-words">{order.shippingAddress}</span>
+                </div>
+              </div>
+
+              {isCashRegister && invoiceQrValue && (
+                <div className="mb-6">
+                  <p className="font-semibold mb-3 text-sm sm:text-base">QR code à scanner en caisse</p>
+                  <div className="flex justify-center mb-3">
+                    <InvoiceQrImage value={invoiceQrValue} size={220} />
+                  </div>
+                  <p className="text-xs text-muted-foreground break-all px-1">{order.invoiceQrCode}</p>
+                </div>
               )}
+
+              {!isCashRegister && (
+                <p className="text-sm text-muted-foreground mb-6">
+                  Votre commande est enregistrée. Vous serez contacté pour la livraison.
+                </p>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link
+                  href="/"
+                  className="min-h-12 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition flex items-center justify-center"
+                >
+                  Retour à la boutique
+                </Link>
+                {isCashRegister && (
+                  <Link
+                    href="/cart"
+                    className="min-h-12 px-6 py-3 border border-border rounded-lg font-semibold hover:bg-muted transition flex items-center justify-center"
+                  >
+                    Voir le panier
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -264,8 +274,18 @@ export default function CheckoutPage() {
             <ArrowLeft className="w-5 h-5 shrink-0" />
             <span className="font-semibold hidden sm:inline truncate">Retour au panier</span>
           </Link>
-          <ShopEdooLogo href="/" height={40} className="sm:hidden" />
-          <ShopEdooLogo href="/" height={44} className="hidden sm:flex" />
+          <ShopEdooLogo
+            href="/"
+            height={32}
+            className="sm:hidden shrink min-w-0"
+            imageClassName="h-8 w-auto max-w-[110px]"
+          />
+          <ShopEdooLogo
+            href="/"
+            height={44}
+            className="hidden sm:flex"
+            imageClassName="h-11 w-auto"
+          />
           <div className="w-10 sm:w-24" />
         </div>
       </div>
