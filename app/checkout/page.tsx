@@ -3,8 +3,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import {
   Banknote,
   CheckCircle2,
@@ -20,7 +18,7 @@ import { formatPrice } from '@/lib/currency';
 import { buildInvoiceQrString } from '@/lib/invoiceQr';
 import { InvoiceQrImage } from '@/components/checkout/InvoiceQrImage';
 import { InvoiceBrandHeader } from '@/components/checkout/InvoiceBrandHeader';
-import { StripePaymentForm } from '@/components/checkout/StripePaymentForm';
+import { OnlinePaymentStep } from '@/components/checkout/OnlinePaymentStep';
 import { PageTitleBar } from '@/components/layout/PageTitleBar';
 
 interface CartItem {
@@ -79,20 +77,6 @@ const PAYMENT_OPTIONS: Array<{
   },
 ];
 
-async function resolveStripePromise(): Promise<Stripe | null> {
-  const envKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
-  if (envKey) {
-    return loadStripe(envKey);
-  }
-
-  const config = await apiClient.getPaymentConfig();
-  if (config.success && config.data?.publishableKey) {
-    return loadStripe(config.data.publishableKey);
-  }
-
-  return null;
-}
-
 export default function CheckoutPage() {
   const { isAuthenticated, user, isLoading: authLoading } = useAuth();
   const router = useRouter();
@@ -105,8 +89,6 @@ export default function CheckoutPage() {
   const [shippingAddress, setShippingAddress] = useState('');
   const [order, setOrder] = useState<Order | null>(null);
   const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>('form');
-  const [clientSecret, setClientSecret] = useState<string | null>(null);
-  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
   const [pendingOrder, setPendingOrder] = useState<Order | null>(null);
 
   useEffect(() => {
@@ -119,6 +101,7 @@ export default function CheckoutPage() {
   }, [isAuthenticated, authLoading, router]);
 
   useEffect(() => {
+    if (authLoading || !isAuthenticated) return;
     if (typeof window === 'undefined') return;
 
     const params = new URLSearchParams(window.location.search);
@@ -139,12 +122,21 @@ export default function CheckoutPage() {
           setOrder({ ...payload.order, paymentMethod: 'online', status: 'paid' });
           setCheckoutStep('done');
           window.history.replaceState({}, '', '/checkout');
+          return;
         }
-      } else {
-        setError(confirm.error || 'Échec de confirmation du paiement.');
       }
+
+      const orderResponse = await apiClient.getOrder(orderId);
+      if (orderResponse.success && orderResponse.data) {
+        setOrder({ ...(orderResponse.data as Order), paymentMethod: 'online', status: 'paid' });
+        setCheckoutStep('done');
+        window.history.replaceState({}, '', '/checkout');
+        return;
+      }
+
+      setError(confirm.error || 'Échec de confirmation du paiement.');
     })();
-  }, []);
+  }, [authLoading, isAuthenticated]);
 
   const fetchCart = async () => {
     const response = await apiClient.getCart();
@@ -167,25 +159,6 @@ export default function CheckoutPage() {
     if (typeof window === 'undefined' || !pendingOrder) return '';
     return `${window.location.origin}/checkout?order_id=${pendingOrder._id}`;
   }, [pendingOrder]);
-
-  const startOnlinePayment = async (createdOrder: Order) => {
-    const stripe = await resolveStripePromise();
-    if (!stripe) {
-      setError('Paiement en ligne indisponible : clé Stripe manquante.');
-      return;
-    }
-
-    const payment = await apiClient.createPaymentIntent(createdOrder._id);
-    if (!payment.success || !payment.data?.clientSecret) {
-      setError(payment.error || 'Impossible d’initialiser le paiement Stripe.');
-      return;
-    }
-
-    setStripePromise(Promise.resolve(stripe));
-    setClientSecret(payment.data.clientSecret);
-    setPendingOrder(createdOrder);
-    setCheckoutStep('payment');
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,7 +191,8 @@ export default function CheckoutPage() {
     const createdOrder = response.data as Order;
 
     if (paymentMethod === 'online') {
-      await startOnlinePayment(createdOrder);
+      setPendingOrder(createdOrder);
+      setCheckoutStep('payment');
       return;
     }
 
@@ -235,7 +209,6 @@ export default function CheckoutPage() {
       paymentMethod: 'online',
     } as Order);
     setCheckoutStep('done');
-    setClientSecret(null);
     setPendingOrder(null);
   };
 
@@ -261,33 +234,23 @@ export default function CheckoutPage() {
     );
   }
 
-  if (checkoutStep === 'payment' && clientSecret && stripePromise && pendingOrder) {
+  if (checkoutStep === 'payment' && pendingOrder) {
     return (
       <>
-        <PageTitleBar title="Paiement carte" backHref="/cart" backLabel="Panier" />
-        <div className="page-container py-6 sm:py-8 flex-1 max-w-lg mx-auto">
-          <h1 className="text-2xl font-bold mb-2">Paiement sécurisé</h1>
-          <p className="text-muted-foreground text-sm mb-6">
-            Total à payer :{' '}
-            <span className="font-bold text-primary">{formatPrice(pendingOrder.totalAmount)}</span>
-          </p>
-
-          {error && (
-            <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3 mb-4">
-              {error}
+        <PageTitleBar title="Paiement carte" backHref="/" backLabel="Boutique" />
+        <div className="page-container py-6 sm:py-8 flex-1">
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold">Paiement en ligne</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Réglez votre commande par carte bancaire en toute sécurité.
             </p>
-          )}
-
-          <div className="bg-card border border-border rounded-xl p-5 sm:p-6">
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <StripePaymentForm
-                orderId={pendingOrder._id}
-                returnUrl={paymentReturnUrl}
-                onSuccess={handlePaymentSuccess}
-                onError={setError}
-              />
-            </Elements>
           </div>
+
+          <OnlinePaymentStep
+            order={pendingOrder}
+            returnUrl={paymentReturnUrl}
+            onSuccess={handlePaymentSuccess}
+          />
         </div>
       </>
     );
