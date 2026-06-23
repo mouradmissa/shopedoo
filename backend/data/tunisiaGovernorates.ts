@@ -54,3 +54,16 @@ export function storeNameForGovernorate(governorate: string): string {
 export function storeAddressForGovernorate(governorate: string): string {
   return `Avenue Habib Bourguiba, ${governorate}`;
 }
+
+/** Prénoms des caissiers filler par boutique */
+export const CASHIER_FILLER_NAMES = ['siwar', 'amira'] as const;
+
+export function cashierEmailForGovernorate(firstName: string, governorate: string): string {
+  const slug = firstName.toLowerCase().replace(/[^a-z]/g, '');
+  return `${slug}.caissier.${governorateToEmailSlug(governorate)}@shopedoo.com`;
+}
+
+export function cashierDisplayName(firstName: string, governorate: string): string {
+  const label = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+  return `${label} Caissier ${governorate}`;
+}

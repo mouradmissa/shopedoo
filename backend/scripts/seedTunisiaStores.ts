@@ -19,7 +19,7 @@ async function main() {
   const result = await seedTunisiaStores();
   result.details.forEach((line) => console.log(line));
 
-  console.log(`\nTerminé : ${result.created} créée(s), ${result.skipped} ignorée(s).`);
+  console.log(`\nTerminé : ${result.storesCreated} boutique(s), ${result.cashiersCreated} caissier(s).`);
   console.log('\nExemple connexion gérant Tataouine :');
   const example = managerEmailForGovernorate('Tataouine');
   console.log(`  Email : ${example}`);

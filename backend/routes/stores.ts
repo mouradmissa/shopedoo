@@ -8,7 +8,7 @@ import {
   AuthRequest,
 } from '../middleware/auth';
 import { canManageStore, getManagerStoreId } from '../utils/storeAccess';
-import { seedTunisiaStores } from '../services/seedTunisiaStores';
+import { seedTunisiaStores, seedTunisiaCashiers } from '../services/seedTunisiaStores';
 
 const router: Router = express.Router();
 
@@ -30,11 +30,29 @@ router.post('/seed/tunisia', authMiddleware, adminMiddleware, async (_req, res: 
   try {
     const result = await seedTunisiaStores();
     res.json({
-      message: `${result.created} boutique(s) créée(s), ${result.skipped} ignorée(s)`,
-      ...result,
+      message: `${result.storesCreated} boutique(s), ${result.cashiersCreated} caissier(s) créés`,
+      created: result.storesCreated,
+      cashiersCreated: result.cashiersCreated,
+      skipped: result.skipped,
+      details: result.details,
     });
   } catch (error) {
     res.status(500).json({ error: 'Échec du seed Tunisie', details: String(error) });
+  }
+});
+
+// Admin: seed cashiers filler for existing Tunisia stores
+router.post('/seed/cashiers', authMiddleware, adminMiddleware, async (_req, res: Response): Promise<void> => {
+  try {
+    const result = await seedTunisiaCashiers();
+    res.json({
+      message: `${result.cashiersCreated} caissier(s) créé(s)`,
+      cashiersCreated: result.cashiersCreated,
+      skipped: result.skipped,
+      details: result.details,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Échec du seed caissiers', details: String(error) });
   }
 });
 

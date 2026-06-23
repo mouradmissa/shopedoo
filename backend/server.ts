@@ -2,6 +2,7 @@ import express, { Express } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './config/mongodb';
+import { seedTunisiaStores } from './services/seedTunisiaStores';
 import authRoutes from './routes/auth';
 import productRoutes from './routes/products';
 import cartRoutes from './routes/cart';
@@ -27,9 +28,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Connect to MongoDB
-connectDB();
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
@@ -54,9 +52,26 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   res.status(500).json({ error: 'Internal server error', details: err.message });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Frontend URL: ${FRONTEND_URL}`);
-});
+async function startServer() {
+  await connectDB();
+
+  if (process.env.SEED_TUNISIA_ON_START !== 'false') {
+    try {
+      const result = await seedTunisiaStores();
+      console.log(
+        `Seed Tunisie: ${result.storesCreated} boutique(s), ${result.cashiersCreated} caissier(s) créés`
+      );
+    } catch (error) {
+      console.error('Seed Tunisie échoué:', error);
+    }
+  }
+
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`Frontend URL: ${FRONTEND_URL}`);
+  });
+}
+
+void startServer();
 
 export default app;

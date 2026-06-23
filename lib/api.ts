@@ -242,11 +242,6 @@ class ApiClient {
     data: { name: string; email: string; password: string; phone?: string }
   ) {
     return this.request(`/stores/${storeId}/cashiers`, 'POST', data);
-  }
-
-  async seedTunisiaStores() {
-    return this.request('/stores/seed/tunisia', 'POST');
-  }
 }
 
 export const apiClient = new ApiClient();
