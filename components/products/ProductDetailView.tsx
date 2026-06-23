@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Loader2, Package } from 'lucide-react';
+import { ArrowLeft, Loader2, Package, ShoppingCart } from 'lucide-react';
 import { formatCategory } from '@/lib/productCategories';
 import { formatPrice } from '@/lib/currency';
 import type { ProductItem } from './ProductCard';
@@ -42,55 +42,70 @@ export function ProductDetailView({
   isAdding = false,
 }: ProductDetailViewProps) {
   const stock = stockInfo(product.stock);
+  const showCustomerCta = variant === 'customer' && onAddToCart;
 
   return (
-    <div className="flex-1 p-4 sm:p-6">
+    <div className={`flex-1 page-container py-4 sm:py-6 ${showCustomerCta ? 'pb-28 sm:pb-6' : ''}`}>
       <Link
         href={backHref}
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition"
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 sm:mb-6 transition"
       >
-        <ArrowLeft className="w-4 h-4" />
-        {backLabel}
+        <ArrowLeft className="w-4 h-4 shrink-0" />
+        <span className="truncate">{backLabel}</span>
       </Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="aspect-square bg-muted rounded-2xl overflow-hidden border border-border relative flex items-center justify-center">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        <div className="w-full max-h-[min(70vh,420px)] sm:max-h-none sm:aspect-square bg-muted rounded-2xl overflow-hidden border border-border relative flex items-center justify-center mx-auto lg:mx-0">
           {product.image ? (
-            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+            <img
+              src={product.image}
+              alt={product.name}
+              className="w-full h-full object-cover max-h-[min(70vh,420px)] sm:max-h-none"
+            />
           ) : (
             <Package className="w-16 h-16 text-muted-foreground" />
           )}
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <p className="text-white font-semibold text-lg">Rupture de stock</p>
+              <p className="text-white font-semibold text-base sm:text-lg px-4 text-center">
+                Rupture de stock
+              </p>
             </div>
           )}
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-4 sm:space-y-5 min-w-0">
           <div>
             <span className="text-xs bg-secondary/10 text-secondary px-2 py-1 rounded">
               {formatCategory(product.category)}
             </span>
-            <h1 className="text-2xl sm:text-3xl font-bold mt-3">{product.name}</h1>
-            <p className="text-3xl font-bold text-primary mt-4">{formatPrice(product.price)}</p>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mt-3 break-words">
+              {product.name}
+            </h1>
+            <p className="text-2xl sm:text-3xl font-bold text-primary mt-3">
+              {formatPrice(product.price)}
+            </p>
           </div>
 
-          <span className={`inline-block px-3 py-1.5 rounded-full text-sm font-medium border ${stock.className}`}>
+          <span
+            className={`inline-block px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border ${stock.className}`}
+          >
             {stock.label}
           </span>
 
           <div>
             <h2 className="font-semibold mb-2">Description</h2>
-            <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+            <p className="text-muted-foreground leading-relaxed text-sm sm:text-base break-words">
+              {product.description}
+            </p>
           </div>
 
-          {variant === 'customer' && onAddToCart && (
+          {showCustomerCta && (
             <button
               type="button"
               onClick={onAddToCart}
               disabled={product.stock === 0 || !canAddToCart || isAdding}
-              className="w-full sm:w-auto px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="hidden sm:flex w-full sm:w-auto min-h-11 px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed items-center justify-center gap-2"
             >
               {isAdding ? (
                 <>
@@ -98,7 +113,10 @@ export function ProductDetailView({
                   Ajout...
                 </>
               ) : (
-                'Add to Cart'
+                <>
+                  <ShoppingCart className="w-5 h-5" />
+                  Ajouter au panier
+                </>
               )}
             </button>
           )}
@@ -111,6 +129,29 @@ export function ProductDetailView({
           )}
         </div>
       </div>
+
+      {showCustomerCta && (
+        <div className="fixed bottom-0 left-0 right-0 sm:hidden z-40 bg-background/95 backdrop-blur border-t border-border p-4 safe-bottom">
+          <button
+            type="button"
+            onClick={onAddToCart}
+            disabled={product.stock === 0 || !canAddToCart || isAdding}
+            className="w-full min-h-12 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {isAdding ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Ajout...
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-5 h-5" />
+                Ajouter au panier — {formatPrice(product.price)}
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

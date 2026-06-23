@@ -189,7 +189,7 @@ export default function CheckoutPage() {
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
-        <div className="max-w-2xl mx-auto px-4 py-10">
+        <div className="max-w-2xl mx-auto px-4 sm:px-0 py-8 sm:py-10">
           <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-lg text-center">
             <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
             <h1 className="text-2xl sm:text-3xl font-bold mb-2">Commande confirmée</h1>
@@ -258,23 +258,24 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/cart" className="flex items-center gap-2 hover:opacity-75 transition">
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-semibold hidden sm:inline">Retour au panier</span>
+      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border safe-top">
+        <div className="page-container h-14 sm:h-16 flex items-center justify-between gap-2">
+          <Link href="/cart" className="flex items-center gap-2 hover:opacity-75 transition min-w-0">
+            <ArrowLeft className="w-5 h-5 shrink-0" />
+            <span className="font-semibold hidden sm:inline truncate">Retour au panier</span>
           </Link>
-          <ShopEdooLogo href="/" height={40} />
-          <div className="w-24" />
+          <ShopEdooLogo href="/" height={40} className="sm:hidden" />
+          <ShopEdooLogo href="/" height={44} className="hidden sm:flex" />
+          <div className="w-10 sm:w-24" />
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Finaliser la commande</h1>
+      <div className="page-container py-6 sm:py-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Finaliser la commande</h1>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <section className="bg-card border border-border rounded-xl p-6">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+            <section className="bg-card border border-border rounded-xl p-4 sm:p-6">
               <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-primary" />
                 Mode de paiement

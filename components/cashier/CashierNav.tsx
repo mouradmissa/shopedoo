@@ -29,13 +29,19 @@ export function CashierNav() {
   const roleLabel = user?.role === 'admin' ? 'Administrateur' : 'Caissier';
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 h-20 flex items-center gap-3 sm:gap-6">
+    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border safe-top">
+      <div className="page-container h-14 sm:h-16 flex items-center gap-2 sm:gap-4">
         <ShopEdooLogo
           href="/caissier"
-          height={68}
+          height={40}
+          className="sm:hidden shrink-0"
+        />
+        <ShopEdooLogo
+          href="/caissier"
+          height={48}
+          className="hidden sm:flex shrink-0"
           suffix={
-            <span className="font-bold text-lg hidden md:inline text-muted-foreground">Caisse</span>
+            <span className="font-bold text-base hidden md:inline text-muted-foreground">Caisse</span>
           }
         />
 
@@ -89,7 +95,7 @@ export function CashierShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-card flex flex-col">
       <CashierNav />
-      <main className="flex-1 flex flex-col max-w-7xl mx-auto w-full">{children}</main>
+      <main className="flex-1 flex flex-col page-container w-full">{children}</main>
     </div>
   );
 }

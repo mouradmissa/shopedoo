@@ -160,10 +160,40 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
     @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+  body {
+    @apply bg-background text-foreground min-h-dvh overflow-x-hidden;
+  }
+}
+
+@layer utilities {
+  .page-container {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6;
+  }
+
+  .touch-target {
+    @apply inline-flex items-center justify-center min-h-11 min-w-11 p-2;
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mobile-scroll-x {
+    @apply flex gap-2 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mobile-scroll-x::-webkit-scrollbar {
+    display: none;
   }
 }
