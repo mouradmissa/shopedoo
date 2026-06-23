@@ -2,7 +2,7 @@ import express, { Router, Response } from 'express';
 import Stripe from 'stripe';
 import Order from '../models/Order';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
-import { CURRENCY_CODE, toStripeAmount } from '../constants/currency';
+import { getStripeCurrency, toStripeAmount } from '../constants/currency';
 import { fulfillOnlineOrderPayment } from '../utils/orderPayment';
 
 let stripeClient: Stripe | null = null;
@@ -14,16 +14,23 @@ function getStripe(): Stripe | null {
   return stripeClient;
 }
 
-function getStripeCurrency(): string {
-  return (process.env.STRIPE_CURRENCY || CURRENCY_CODE).toLowerCase();
+function stripeErrorMessage(error: unknown): string {
+  if (error instanceof Stripe.errors.StripeError) {
+    return error.message;
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
 }
 
 const router: Router = express.Router();
 
 router.get('/config', (_req, res: Response): void => {
-  const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  const publishableKey =
+    process.env.STRIPE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
   if (!publishableKey) {
-    res.status(503).json({ error: 'Stripe publishable key is not configured' });
+    res.status(503).json({ error: 'Clé publique Stripe non configurée (pk_test_...)' });
     return;
   }
 
@@ -33,6 +40,44 @@ router.get('/config', (_req, res: Response): void => {
   });
 });
 
+async function createOrReusePaymentIntent(
+  stripe: Stripe,
+  order: InstanceType<typeof Order>,
+  orderId: string,
+  userId: string
+) {
+  if (order.stripePaymentId) {
+    try {
+      const existing = await stripe.paymentIntents.retrieve(order.stripePaymentId);
+      const reusable = ['requires_payment_method', 'requires_confirmation', 'requires_action'];
+      if (reusable.includes(existing.status) && existing.client_secret) {
+        return existing;
+      }
+    } catch {
+      // intent invalide — on en crée un nouveau
+    }
+  }
+
+  const amount = toStripeAmount(order.totalAmount);
+  const currency = getStripeCurrency();
+
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount,
+    currency,
+    payment_method_types: ['card'],
+    metadata: {
+      orderId,
+      userId,
+      displayAmountTnd: String(order.totalAmount),
+    },
+  });
+
+  order.stripePaymentId = paymentIntent.id;
+  await order.save();
+
+  return paymentIntent;
+}
+
 router.post(
   '/create-payment-intent',
   authMiddleware,
@@ -40,14 +85,17 @@ router.post(
     try {
       const stripe = getStripe();
       if (!stripe) {
-        res.status(503).json({ error: 'Stripe n’est pas configuré' });
+        res.status(503).json({
+          error: 'Stripe non configuré',
+          details: 'Ajoutez STRIPE_SECRET_KEY sur le serveur API.',
+        });
         return;
       }
 
       const { orderId } = req.body as { orderId?: string };
 
       if (!orderId) {
-        res.status(400).json({ error: 'Order ID is required' });
+        res.status(400).json({ error: 'Identifiant de commande requis' });
         return;
       }
 
@@ -73,24 +121,29 @@ router.post(
         return;
       }
 
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: toStripeAmount(order.totalAmount),
-        currency: getStripeCurrency(),
-        automatic_payment_methods: { enabled: true },
-        metadata: {
-          orderId,
-          userId: req.user?.userId ?? '',
-        },
-      });
+      const paymentIntent = await createOrReusePaymentIntent(
+        stripe,
+        order,
+        orderId,
+        req.user?.userId ?? ''
+      );
+
+      if (!paymentIntent.client_secret) {
+        res.status(500).json({ error: 'Secret de paiement Stripe manquant' });
+        return;
+      }
 
       res.json({
         clientSecret: paymentIntent.client_secret,
         paymentIntentId: paymentIntent.id,
+        currency: getStripeCurrency(),
       });
     } catch (error) {
+      const details = stripeErrorMessage(error);
+      console.error('create-payment-intent:', details);
       res.status(500).json({
         error: 'Impossible de créer le paiement',
-        details: String(error),
+        details,
       });
     }
   }
@@ -103,7 +156,7 @@ router.post(
     try {
       const stripe = getStripe();
       if (!stripe) {
-        res.status(503).json({ error: 'Stripe n’est pas configuré' });
+        res.status(503).json({ error: 'Stripe non configuré' });
         return;
       }
 
@@ -155,7 +208,7 @@ router.post(
     } catch (error) {
       res.status(500).json({
         error: 'Échec de confirmation du paiement',
-        details: String(error),
+        details: stripeErrorMessage(error),
       });
     }
   }

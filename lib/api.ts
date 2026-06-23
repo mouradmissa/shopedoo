@@ -5,6 +5,7 @@ export interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: string;
+  details?: string;
 }
 
 class ApiClient {
@@ -78,6 +79,7 @@ class ApiClient {
         return {
           success: false,
           error: data.error || 'An error occurred',
+          details: data.details,
         };
       }
 

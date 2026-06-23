@@ -21,6 +21,8 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
+      - key: STRIPE_CURRENCY
+        value: eur
       - key: FRONTEND_URL
         fromService:
           type: web

@@ -46,7 +46,8 @@ export function OnlinePaymentStep({ order, returnUrl, onSuccess }: OnlinePayment
       if (cancelled) return;
 
       if (!payment.success || !payment.data?.clientSecret) {
-        setError(payment.error || 'Impossible d’initialiser le paiement.');
+        const detail = payment.details ? `\n${payment.details}` : '';
+        setError((payment.error || 'Impossible d’initialiser le paiement.') + detail);
         setIsBootstrapping(false);
         return;
       }
@@ -89,7 +90,11 @@ export function OnlinePaymentStep({ order, returnUrl, onSuccess }: OnlinePayment
   if (error || !clientSecret || !stripePromise || !elementsOptions) {
     return (
       <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-5 space-y-4">
-        <p className="text-sm text-destructive">{error || 'Impossible d’afficher le formulaire de paiement.'}</p>
+        <p className="text-sm text-destructive whitespace-pre-wrap">{error || 'Impossible d’afficher le formulaire de paiement.'}</p>
+        <p className="text-xs text-muted-foreground">
+          Vérifiez que <code className="bg-muted px-1 rounded">STRIPE_SECRET_KEY</code> et{' '}
+          <code className="bg-muted px-1 rounded">STRIPE_PUBLISHABLE_KEY</code> sont configurés sur Render.
+        </p>
         <button
           type="button"
           onClick={() => window.location.reload()}
