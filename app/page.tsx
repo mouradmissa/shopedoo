@@ -68,12 +68,17 @@ export default function Home() {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
         <ShopNav cartCount={cartCount} />
 
-        <section className="page-container py-8 sm:py-12 md:py-16">
-          <div className="text-center mb-8 sm:mb-12">
-            <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold mb-4 text-balance flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-              Bienvenue sur <ShopEdooLogo height={48} imageClassName="sm:h-14 w-auto" />
-            </h1>
-            <p className="text-sm sm:text-lg text-muted-foreground text-balance max-w-2xl mx-auto px-2">
+        <section className="page-container py-6 sm:py-12 md:py-16">
+          <div className="text-center mb-6 sm:mb-12 space-y-3 sm:space-y-4">
+            <p className="text-lg sm:text-2xl md:text-3xl font-bold text-balance">
+              Bienvenue sur
+            </p>
+            <ShopEdooLogo
+              height={32}
+              className="justify-center mx-auto"
+              imageClassName="h-8 sm:h-11 md:h-14 w-auto max-w-[min(220px,78vw)] sm:max-w-[320px]"
+            />
+            <p className="text-sm sm:text-lg text-muted-foreground text-balance max-w-2xl mx-auto px-2 pt-1">
               Découvrez nos produits télécom et services avec scan QR innovant
             </p>
           </div>

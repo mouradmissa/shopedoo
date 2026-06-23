@@ -33,13 +33,15 @@ export function CashierNav() {
       <div className="page-container h-14 sm:h-16 flex items-center gap-2 sm:gap-4">
         <ShopEdooLogo
           href="/caissier"
-          height={40}
-          className="sm:hidden shrink-0"
+          height={32}
+          className="sm:hidden shrink min-w-0"
+          imageClassName="h-8 w-auto max-w-[100px]"
         />
         <ShopEdooLogo
           href="/caissier"
-          height={48}
+          height={44}
           className="hidden sm:flex shrink-0"
+          imageClassName="h-11 w-auto"
           suffix={
             <span className="font-bold text-base hidden md:inline text-muted-foreground">Caisse</span>
           }

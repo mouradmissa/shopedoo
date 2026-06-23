@@ -15,8 +15,20 @@ export function ShopNav({ cartCount = 0 }: ShopNavProps) {
   return (
     <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border safe-top">
       <div className="page-container h-14 sm:h-16 flex items-center justify-between gap-2">
-        <ShopEdooLogo href="/" height={44} className="sm:hidden" priority />
-        <ShopEdooLogo href="/" height={52} className="hidden sm:flex" priority />
+        <ShopEdooLogo
+          href="/"
+          height={32}
+          className="sm:hidden shrink min-w-0"
+          imageClassName="h-8 w-auto max-w-[110px]"
+          priority
+        />
+        <ShopEdooLogo
+          href="/"
+          height={48}
+          className="hidden sm:flex"
+          imageClassName="h-12 w-auto"
+          priority
+        />
 
         <div className="flex items-center gap-1 sm:gap-2">
           {isAuthenticated ? (

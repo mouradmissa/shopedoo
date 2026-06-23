@@ -27,7 +27,7 @@ function LogoImage({
       alt="shopedoo"
       width={width}
       height={height}
-      className={cn('object-contain rounded-md', imageClassName)}
+      className={cn('object-contain rounded-md w-auto max-w-full h-auto', imageClassName)}
       priority={priority}
     />
   );

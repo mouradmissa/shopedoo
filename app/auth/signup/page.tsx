@@ -43,7 +43,12 @@ export default function SignUpPage() {
         <div className="bg-card rounded-2xl border border-border p-8 shadow-lg">
           {/* Header */}
           <div className="mb-8">
-            <ShopEdooLogo href="/" height={68} className="mb-6 justify-center w-full" />
+            <ShopEdooLogo
+              href="/"
+              height={48}
+              className="mb-6 justify-center w-full"
+              imageClassName="h-10 sm:h-14 w-auto max-w-[min(240px,80vw)]"
+            />
             <h1 className="text-3xl font-bold mb-2 text-center">Rejoignez shopedoo</h1>
             <p className="text-muted-foreground text-center">Create your account to start shopping</p>
           </div>
