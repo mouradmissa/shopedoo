@@ -9,6 +9,7 @@ export interface IProduct extends Document {
   image: string;
   qrCode: string;
   qrCodeImage?: string;
+  qrCodePayload?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +24,7 @@ const productSchema = new Schema<IProduct>(
     image: String,
     qrCode: { type: String, unique: true, sparse: true },
     qrCodeImage: String,
+    qrCodePayload: String,
   },
   { timestamps: true }
 );

@@ -105,6 +105,7 @@ export function ProductDetailView({
             <ProductQrDisplay
               qrCode={product.qrCode}
               qrCodeImage={product.qrCodeImage}
+              qrCodePayload={product.qrCodePayload}
               productName={product.name}
               productId={product._id}
             />

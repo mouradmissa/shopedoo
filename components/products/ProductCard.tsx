@@ -14,6 +14,7 @@ export interface ProductItem {
   image?: string;
   qrCode?: string;
   qrCodeImage?: string;
+  qrCodePayload?: string;
 }
 
 interface ProductCardProps {

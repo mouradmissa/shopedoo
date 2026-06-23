@@ -19,6 +19,7 @@ interface Product {
   image?: string;
   qrCode: string;
   qrCodeImage?: string;
+  qrCodePayload?: string;
 }
 
 export default function AdminProductsPage() {
@@ -300,6 +301,7 @@ export default function AdminProductsPage() {
               <ProductQrDisplay
                 qrCode={qrProduct.qrCode}
                 qrCodeImage={qrProduct.qrCodeImage}
+                qrCodePayload={qrProduct.qrCodePayload}
                 productName={qrProduct.name}
                 productId={qrProduct._id}
               />

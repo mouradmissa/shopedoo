@@ -49,7 +49,7 @@ export default function ProductDetailPage() {
 
   const addToCart = async () => {
     if (!isAuthenticated) {
-      router.push('/auth/signin');
+      router.push(`/auth/signin?redirect=/products/${id}`);
       return;
     }
 
@@ -89,7 +89,7 @@ export default function ProductDetailPage() {
             backLabel="Retour à la boutique"
             variant="customer"
             onAddToCart={addToCart}
-            canAddToCart={isAuthenticated}
+            canAddToCart={product.stock > 0}
             isAdding={isAdding}
           />
         )}

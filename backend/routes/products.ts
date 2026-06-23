@@ -2,7 +2,7 @@ import express, { Router, Response } from 'express';
 import Product from '../models/Product';
 import QRCode from '../models/QRCode';
 import { authMiddleware, adminMiddleware, AuthRequest } from '../middleware/auth';
-import { generateProductQrImage, ensureProductQrImage } from '../utils/productQr';
+import { generateProductQrImage, ensureProductQrImage, getProductPageUrl } from '../utils/productQr';
 import { v4 as uuidv4 } from 'uuid';
 
 const router: Router = express.Router();
@@ -113,7 +113,8 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: 
     await product.save();
 
     const code = `SHOPEDOO-${uuidv4()}`;
-    const qrCodeImage = await generateProductQrImage(code);
+    const payload = getProductPageUrl(String(product._id));
+    const qrCodeImage = await generateProductQrImage(payload);
 
     const qrCode = new QRCode({
       productId: product._id,
@@ -123,6 +124,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: 
     await qrCode.save();
 
     product.qrCode = code;
+    product.qrCodePayload = payload;
     product.qrCodeImage = qrCodeImage;
     await product.save();
 

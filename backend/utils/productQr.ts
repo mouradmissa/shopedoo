@@ -2,8 +2,13 @@ import QRCode from 'qrcode';
 import { HydratedDocument } from 'mongoose';
 import { IProduct } from '../models/Product';
 
-export async function generateProductQrImage(code: string): Promise<string> {
-  return QRCode.toDataURL(code, {
+export function getProductPageUrl(productId: string): string {
+  const base = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+  return `${base}/products/${productId}`;
+}
+
+export async function generateProductQrImage(payload: string): Promise<string> {
+  return QRCode.toDataURL(payload, {
     width: 512,
     margin: 2,
     errorCorrectionLevel: 'M',
@@ -13,10 +18,14 @@ export async function generateProductQrImage(code: string): Promise<string> {
 export async function ensureProductQrImage(
   product: HydratedDocument<IProduct>
 ): Promise<string | undefined> {
-  if (!product.qrCode) return undefined;
-  if (product.qrCodeImage) return product.qrCodeImage;
+  const productId = String(product._id);
+  const payload = getProductPageUrl(productId);
 
-  product.qrCodeImage = await generateProductQrImage(product.qrCode);
-  await product.save();
+  if (!product.qrCodeImage || product.qrCodePayload !== payload) {
+    product.qrCodePayload = payload;
+    product.qrCodeImage = await generateProductQrImage(payload);
+    await product.save();
+  }
+
   return product.qrCodeImage;
 }

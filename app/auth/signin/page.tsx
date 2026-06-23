@@ -22,7 +22,14 @@ export default function SignInPage() {
 
     try {
       const loggedUser = await signin(email, password);
-      if (loggedUser.role === 'cashier') {
+      const redirect =
+        typeof window !== 'undefined'
+          ? new URLSearchParams(window.location.search).get('redirect')
+          : null;
+
+      if (redirect && redirect.startsWith('/')) {
+        router.push(redirect);
+      } else if (loggedUser.role === 'cashier') {
         router.push('/caissier');
       } else if (loggedUser.role === 'admin') {
         router.push('/admin');

@@ -5,6 +5,7 @@ import { Download } from 'lucide-react';
 interface ProductQrDisplayProps {
   qrCode?: string;
   qrCodeImage?: string;
+  qrCodePayload?: string;
   productName?: string;
   productId?: string;
   compact?: boolean;
@@ -13,6 +14,7 @@ interface ProductQrDisplayProps {
 export function ProductQrDisplay({
   qrCode,
   qrCodeImage,
+  qrCodePayload,
   productName,
   productId,
   compact = false,
@@ -56,7 +58,12 @@ export function ProductQrDisplay({
             } object-contain`}
           />
           {qrCode && (
-            <p className="text-xs text-muted-foreground break-all text-center max-w-full">{qrCode}</p>
+            <p className="text-xs text-muted-foreground break-all text-center max-w-full">
+              {qrCode}
+            </p>
+          )}
+          {qrCodePayload && (
+            <p className="text-xs text-primary break-all text-center max-w-full">{qrCodePayload}</p>
           )}
           <button
             type="button"
