@@ -8,7 +8,7 @@ import productRoutes from './routes/products';
 import cartRoutes from './routes/cart';
 import orderRoutes from './routes/orders';
 import storeRoutes from './routes/stores';
-import paymentRoutes from './routes/payment';
+import paymentRoutes, { handleStripeWebhook } from './routes/payment';
 
 dotenv.config({ path: 'backend/.env' });
 
@@ -24,6 +24,13 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
+);
+app.post(
+  '/api/payment/webhook',
+  express.raw({ type: 'application/json' }),
+  (req, res, next) => {
+    void handleStripeWebhook(req, res).catch(next);
+  }
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

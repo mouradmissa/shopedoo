@@ -3,6 +3,7 @@ import Stripe from 'stripe';
 import Order from '../models/Order';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
 import { CURRENCY_CODE, toStripeAmount } from '../constants/currency';
+import { fulfillOnlineOrderPayment } from '../utils/orderPayment';
 
 let stripeClient: Stripe | null = null;
 
@@ -13,13 +14,25 @@ function getStripe(): Stripe | null {
   return stripeClient;
 }
 
-const router: Router = express.Router();
-
-interface PaymentIntentRequest {
-  orderId: string;
+function getStripeCurrency(): string {
+  return (process.env.STRIPE_CURRENCY || CURRENCY_CODE).toLowerCase();
 }
 
-// Create payment intent for an order
+const router: Router = express.Router();
+
+router.get('/config', (_req, res: Response): void => {
+  const publishableKey = process.env.STRIPE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  if (!publishableKey) {
+    res.status(503).json({ error: 'Stripe publishable key is not configured' });
+    return;
+  }
+
+  res.json({
+    publishableKey,
+    currency: getStripeCurrency(),
+  });
+});
+
 router.post(
   '/create-payment-intent',
   authMiddleware,
@@ -27,11 +40,11 @@ router.post(
     try {
       const stripe = getStripe();
       if (!stripe) {
-        res.status(503).json({ error: 'Stripe is not configured' });
+        res.status(503).json({ error: 'Stripe n’est pas configuré' });
         return;
       }
 
-      const { orderId } = req.body as PaymentIntentRequest;
+      const { orderId } = req.body as { orderId?: string };
 
       if (!orderId) {
         res.status(400).json({ error: 'Order ID is required' });
@@ -41,23 +54,32 @@ router.post(
       const order = await Order.findById(orderId);
 
       if (!order) {
-        res.status(404).json({ error: 'Order not found' });
+        res.status(404).json({ error: 'Commande introuvable' });
         return;
       }
 
-      // Check if user owns this order
       if (order.userId.toString() !== req.user?.userId) {
-        res.status(403).json({ error: 'Unauthorized' });
+        res.status(403).json({ error: 'Non autorisé' });
         return;
       }
 
-      // Create payment intent
+      if (order.paymentMethod !== 'online') {
+        res.status(400).json({ error: 'Cette commande ne requiert pas de paiement en ligne' });
+        return;
+      }
+
+      if (order.status === 'paid') {
+        res.status(400).json({ error: 'Commande déjà payée' });
+        return;
+      }
+
       const paymentIntent = await stripe.paymentIntents.create({
         amount: toStripeAmount(order.totalAmount),
-        currency: CURRENCY_CODE.toLowerCase(),
+        currency: getStripeCurrency(),
+        automatic_payment_methods: { enabled: true },
         metadata: {
-          orderId: orderId,
-          userId: req.user?.userId,
+          orderId,
+          userId: req.user?.userId ?? '',
         },
       });
 
@@ -66,12 +88,14 @@ router.post(
         paymentIntentId: paymentIntent.id,
       });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to create payment intent', details: String(error) });
+      res.status(500).json({
+        error: 'Impossible de créer le paiement',
+        details: String(error),
+      });
     }
   }
 );
 
-// Confirm payment
 router.post(
   '/confirm-payment',
   authMiddleware,
@@ -79,53 +103,68 @@ router.post(
     try {
       const stripe = getStripe();
       if (!stripe) {
-        res.status(503).json({ error: 'Stripe is not configured' });
+        res.status(503).json({ error: 'Stripe n’est pas configuré' });
         return;
       }
 
-      const { orderId, paymentIntentId } = req.body;
+      const { orderId, paymentIntentId } = req.body as {
+        orderId?: string;
+        paymentIntentId?: string;
+      };
 
       if (!orderId || !paymentIntentId) {
-        res.status(400).json({ error: 'Missing required fields' });
+        res.status(400).json({ error: 'Champs requis manquants' });
         return;
       }
 
       const order = await Order.findById(orderId);
 
       if (!order) {
-        res.status(404).json({ error: 'Order not found' });
+        res.status(404).json({ error: 'Commande introuvable' });
         return;
       }
 
-      // Verify payment intent status
+      if (order.userId.toString() !== req.user?.userId) {
+        res.status(403).json({ error: 'Non autorisé' });
+        return;
+      }
+
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
 
+      if (paymentIntent.metadata?.orderId !== orderId) {
+        res.status(400).json({ error: 'Paiement invalide pour cette commande' });
+        return;
+      }
+
       if (paymentIntent.status === 'succeeded') {
-        // Update order status
-        order.status = 'paid';
-        order.stripePaymentId = paymentIntentId;
-        await order.save();
+        const updatedOrder = await fulfillOnlineOrderPayment(orderId, paymentIntentId);
 
         res.json({
           success: true,
-          message: 'Payment successful',
-          order,
+          message: 'Paiement réussi',
+          order: updatedOrder,
         });
-      } else {
-        res.status(400).json({
-          success: false,
-          error: 'Payment not completed',
-          status: paymentIntent.status,
-        });
+        return;
       }
+
+      res.status(400).json({
+        success: false,
+        error: 'Paiement non finalisé',
+        status: paymentIntent.status,
+      });
     } catch (error) {
-      res.status(500).json({ error: 'Failed to confirm payment', details: String(error) });
+      res.status(500).json({
+        error: 'Échec de confirmation du paiement',
+        details: String(error),
+      });
     }
   }
 );
 
-// Webhook for payment events
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req: express.Request, res: Response): Promise<void> => {
+export async function handleStripeWebhook(
+  req: express.Request,
+  res: Response
+): Promise<void> {
   const stripe = getStripe();
   if (!stripe || !process.env.STRIPE_WEBHOOK_SECRET) {
     res.status(503).send('Stripe webhook is not configured');
@@ -133,51 +172,37 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req: e
   }
 
   const sig = req.headers['stripe-signature'] as string;
-  let event;
 
   try {
-    event = stripe.webhooks.constructEvent(
+    const event = stripe.webhooks.constructEvent(
       req.body,
       sig,
-      process.env.STRIPE_WEBHOOK_SECRET || ''
+      process.env.STRIPE_WEBHOOK_SECRET
     );
-  } catch (err: any) {
-    res.status(400).send(`Webhook Error: ${err.message}`);
-    return;
-  }
 
-  try {
     if (event.type === 'payment_intent.succeeded') {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       const orderId = paymentIntent.metadata?.orderId;
 
       if (orderId) {
-        const order = await Order.findByIdAndUpdate(
-          orderId,
-          {
-            status: 'paid',
-            stripePaymentId: paymentIntent.id,
-          },
-          { new: true }
-        );
-
-        console.log(`Payment confirmed for order: ${orderId}`, order);
+        await fulfillOnlineOrderPayment(orderId, paymentIntent.id);
+        console.log(`Paiement confirmé pour la commande: ${orderId}`);
       }
     }
 
     if (event.type === 'payment_intent.payment_failed') {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
       const orderId = paymentIntent.metadata?.orderId;
-
       if (orderId) {
-        console.log(`Payment failed for order: ${orderId}`);
+        console.log(`Paiement échoué pour la commande: ${orderId}`);
       }
     }
 
     res.json({ received: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Webhook processing failed', details: String(error) });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(400).send(`Webhook Error: ${message}`);
   }
-});
+}
 
 export default router;

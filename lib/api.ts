@@ -191,12 +191,23 @@ class ApiClient {
   }
 
   // Payment endpoints
+  async getPaymentConfig() {
+    return this.request<{ publishableKey: string; currency: string }>('/payment/config', 'GET');
+  }
+
   async createPaymentIntent(orderId: string) {
-    return this.request('/payment/create-payment-intent', 'POST', { orderId });
+    return this.request<{ clientSecret: string; paymentIntentId: string }>(
+      '/payment/create-payment-intent',
+      'POST',
+      { orderId }
+    );
   }
 
   async confirmPayment(orderId: string, paymentIntentId: string) {
-    return this.request('/payment/confirm-payment', 'POST', { orderId, paymentIntentId });
+    return this.request<{ success: boolean; order: unknown }>('/payment/confirm-payment', 'POST', {
+      orderId,
+      paymentIntentId,
+    });
   }
 
   async confirmCashPayment(qrCode: string) {

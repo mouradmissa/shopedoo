@@ -115,6 +115,7 @@ router.post('/checkout', authMiddleware, async (req: AuthRequest, res: Response)
     }
 
     const isCashRegister = paymentMethod === 'cash_register';
+    const isOnline = paymentMethod === 'online';
     const needsAddress = ['online', 'cash_delivery', 'stripe', 'cash'].includes(paymentMethod);
 
     if (needsAddress && !shippingAddress?.trim()) {
@@ -152,7 +153,7 @@ router.post('/checkout', authMiddleware, async (req: AuthRequest, res: Response)
         price: product.price,
       });
 
-      if (!isCashRegister) {
+      if (!isCashRegister && !isOnline) {
         product.stock -= cartItem.quantity;
         await product.save();
       }

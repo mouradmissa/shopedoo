@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe, type Stripe } from '@stripe/stripe-js';
 import {
   Banknote,
   CheckCircle2,
@@ -18,6 +20,7 @@ import { formatPrice } from '@/lib/currency';
 import { buildInvoiceQrString } from '@/lib/invoiceQr';
 import { InvoiceQrImage } from '@/components/checkout/InvoiceQrImage';
 import { InvoiceBrandHeader } from '@/components/checkout/InvoiceBrandHeader';
+import { StripePaymentForm } from '@/components/checkout/StripePaymentForm';
 import { PageTitleBar } from '@/components/layout/PageTitleBar';
 
 interface CartItem {
@@ -48,6 +51,7 @@ interface Order {
 }
 
 type PaymentMethod = 'cash_register' | 'cash_delivery' | 'online';
+type CheckoutStep = 'form' | 'payment' | 'done';
 
 const PAYMENT_OPTIONS: Array<{
   id: PaymentMethod;
@@ -70,10 +74,24 @@ const PAYMENT_OPTIONS: Array<{
   {
     id: 'online',
     title: 'Paiement en ligne',
-    description: 'Carte bancaire (commande en attente de paiement).',
+    description: 'Carte bancaire sécurisée via Stripe.',
     icon: CreditCard,
   },
 ];
+
+async function resolveStripePromise(): Promise<Stripe | null> {
+  const envKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  if (envKey) {
+    return loadStripe(envKey);
+  }
+
+  const config = await apiClient.getPaymentConfig();
+  if (config.success && config.data?.publishableKey) {
+    return loadStripe(config.data.publishableKey);
+  }
+
+  return null;
+}
 
 export default function CheckoutPage() {
   const { isAuthenticated, user, isLoading: authLoading } = useAuth();
@@ -86,6 +104,10 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash_register');
   const [shippingAddress, setShippingAddress] = useState('');
   const [order, setOrder] = useState<Order | null>(null);
+  const [checkoutStep, setCheckoutStep] = useState<CheckoutStep>('form');
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null);
+  const [pendingOrder, setPendingOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
@@ -95,6 +117,34 @@ export default function CheckoutPage() {
     }
     fetchCart();
   }, [isAuthenticated, authLoading, router]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const paymentIntentId = params.get('payment_intent');
+    const redirectStatus = params.get('redirect_status');
+    const orderId = params.get('order_id');
+
+    if (!paymentIntentId || redirectStatus !== 'succeeded' || !orderId) return;
+
+    void (async () => {
+      setIsLoading(true);
+      const confirm = await apiClient.confirmPayment(orderId, paymentIntentId);
+      setIsLoading(false);
+
+      if (confirm.success && confirm.data) {
+        const payload = confirm.data as { order?: Order };
+        if (payload.order) {
+          setOrder({ ...payload.order, paymentMethod: 'online', status: 'paid' });
+          setCheckoutStep('done');
+          window.history.replaceState({}, '', '/checkout');
+        }
+      } else {
+        setError(confirm.error || 'Échec de confirmation du paiement.');
+      }
+    })();
+  }, []);
 
   const fetchCart = async () => {
     const response = await apiClient.getCart();
@@ -112,6 +162,30 @@ export default function CheckoutPage() {
   const total = subtotal + tax;
 
   const needsAddress = paymentMethod === 'cash_delivery' || paymentMethod === 'online';
+
+  const paymentReturnUrl = useMemo(() => {
+    if (typeof window === 'undefined' || !pendingOrder) return '';
+    return `${window.location.origin}/checkout?order_id=${pendingOrder._id}`;
+  }, [pendingOrder]);
+
+  const startOnlinePayment = async (createdOrder: Order) => {
+    const stripe = await resolveStripePromise();
+    if (!stripe) {
+      setError('Paiement en ligne indisponible : clé Stripe manquante.');
+      return;
+    }
+
+    const payment = await apiClient.createPaymentIntent(createdOrder._id);
+    if (!payment.success || !payment.data?.clientSecret) {
+      setError(payment.error || 'Impossible d’initialiser le paiement Stripe.');
+      return;
+    }
+
+    setStripePromise(Promise.resolve(stripe));
+    setClientSecret(payment.data.clientSecret);
+    setPendingOrder(createdOrder);
+    setCheckoutStep('payment');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,12 +210,33 @@ export default function CheckoutPage() {
 
     setIsSubmitting(false);
 
-    if (response.success && response.data) {
-      setOrder(response.data as Order);
+    if (!response.success || !response.data) {
+      setError(response.error || 'Échec de la commande. Réessayez.');
       return;
     }
 
-    setError(response.error || 'Échec de la commande. Réessayez.');
+    const createdOrder = response.data as Order;
+
+    if (paymentMethod === 'online') {
+      await startOnlinePayment(createdOrder);
+      return;
+    }
+
+    setOrder(createdOrder);
+    setCheckoutStep('done');
+  };
+
+  const handlePaymentSuccess = (paidOrder: { _id: string; status: string; totalAmount: number }) => {
+    setOrder({
+      ...(pendingOrder ?? { shippingAddress: shippingAddress.trim(), paymentMethod: 'online' }),
+      _id: paidOrder._id,
+      status: paidOrder.status,
+      totalAmount: paidOrder.totalAmount,
+      paymentMethod: 'online',
+    } as Order);
+    setCheckoutStep('done');
+    setClientSecret(null);
+    setPendingOrder(null);
   };
 
   const invoiceQrValue = useMemo(() => {
@@ -166,29 +261,41 @@ export default function CheckoutPage() {
     );
   }
 
-  if (!cart || cart.items.length === 0) {
+  if (checkoutStep === 'payment' && clientSecret && stripePromise && pendingOrder) {
     return (
       <>
-        <PageTitleBar title="Commande" backHref="/cart" backLabel="Panier" />
-        <div className="flex items-center justify-center px-4 py-16 flex-1">
-          <div className="text-center max-w-md">
-          <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-          <h1 className="text-2xl font-bold mb-2">Panier vide</h1>
-          <p className="text-muted-foreground mb-6">Ajoutez des produits avant de passer commande.</p>
-          <Link
-            href="/"
-            className="inline-block px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition"
-          >
-            Continuer vos achats
-          </Link>
+        <PageTitleBar title="Paiement carte" backHref="/cart" backLabel="Panier" />
+        <div className="page-container py-6 sm:py-8 flex-1 max-w-lg mx-auto">
+          <h1 className="text-2xl font-bold mb-2">Paiement sécurisé</h1>
+          <p className="text-muted-foreground text-sm mb-6">
+            Total à payer :{' '}
+            <span className="font-bold text-primary">{formatPrice(pendingOrder.totalAmount)}</span>
+          </p>
+
+          {error && (
+            <p className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-3 mb-4">
+              {error}
+            </p>
+          )}
+
+          <div className="bg-card border border-border rounded-xl p-5 sm:p-6">
+            <Elements stripe={stripePromise} options={{ clientSecret }}>
+              <StripePaymentForm
+                orderId={pendingOrder._id}
+                returnUrl={paymentReturnUrl}
+                onSuccess={handlePaymentSuccess}
+                onError={setError}
+              />
+            </Elements>
           </div>
         </div>
       </>
     );
   }
 
-  if (order) {
+  if (checkoutStep === 'done' && order) {
     const isCashRegister = order.paymentMethod === 'cash_register';
+    const isOnlinePaid = order.paymentMethod === 'online' && order.status === 'paid';
 
     return (
       <>
@@ -197,22 +304,28 @@ export default function CheckoutPage() {
           <div className="bg-card border border-border rounded-2xl shadow-lg overflow-hidden">
             <InvoiceBrandHeader
               orderRef={order._id.slice(-8).toUpperCase()}
-              status={isCashRegister ? 'pending' : undefined}
+              status={isCashRegister ? 'pending' : isOnlinePaid ? 'paid' : undefined}
             />
 
             <div className="p-5 sm:p-8 text-center">
               <CheckCircle2 className="w-14 h-14 sm:w-16 sm:h-16 text-green-600 mx-auto mb-4" />
-              <h1 className="text-xl sm:text-3xl font-bold mb-2">Commande confirmée</h1>
+              <h1 className="text-xl sm:text-3xl font-bold mb-2">
+                {isOnlinePaid ? 'Paiement réussi' : 'Commande confirmée'}
+              </h1>
               <p className="text-muted-foreground text-sm sm:text-base mb-6">
                 {isCashRegister
                   ? 'Présentez cette facture au caissier pour régler votre commande.'
-                  : `Référence #${order._id.slice(-8).toUpperCase()}`}
+                  : isOnlinePaid
+                    ? 'Votre paiement par carte a été accepté. Merci pour votre commande !'
+                    : `Référence #${order._id.slice(-8).toUpperCase()}`}
               </p>
 
               <div className="rounded-xl bg-muted/50 border border-border p-4 mb-6 text-left space-y-2">
                 <div className="flex justify-between text-sm gap-3">
                   <span className="text-muted-foreground shrink-0">Total</span>
-                  <span className="font-bold text-primary text-right">{formatPrice(order.totalAmount)}</span>
+                  <span className="font-bold text-primary text-right">
+                    {formatPrice(order.totalAmount)}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm gap-3">
                   <span className="text-muted-foreground shrink-0">Paiement</span>
@@ -221,9 +334,15 @@ export default function CheckoutPage() {
                       ? 'À la caisse'
                       : order.paymentMethod === 'cash_delivery'
                         ? 'Espèces à la livraison'
-                        : 'En ligne'}
+                        : 'Carte bancaire'}
                   </span>
                 </div>
+                {isOnlinePaid && (
+                  <div className="flex justify-between text-sm gap-3">
+                    <span className="text-muted-foreground shrink-0">Statut</span>
+                    <span className="text-green-700 font-medium text-right">Payé</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-sm gap-3">
                   <span className="text-muted-foreground shrink-0">Adresse</span>
                   <span className="text-right max-w-[65%] break-words">{order.shippingAddress}</span>
@@ -240,7 +359,7 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              {!isCashRegister && (
+              {!isCashRegister && !isOnlinePaid && (
                 <p className="text-sm text-muted-foreground mb-6">
                   Votre commande est enregistrée. Vous serez contacté pour la livraison.
                 </p>
@@ -253,16 +372,31 @@ export default function CheckoutPage() {
                 >
                   Retour à la boutique
                 </Link>
-                {isCashRegister && (
-                  <Link
-                    href="/cart"
-                    className="min-h-12 px-6 py-3 border border-border rounded-lg font-semibold hover:bg-muted transition flex items-center justify-center"
-                  >
-                    Voir le panier
-                  </Link>
-                )}
               </div>
             </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  if (!cart || cart.items.length === 0) {
+    return (
+      <>
+        <PageTitleBar title="Commande" backHref="/cart" backLabel="Panier" />
+        <div className="flex items-center justify-center px-4 py-16 flex-1">
+          <div className="text-center max-w-md">
+            <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <h1 className="text-2xl font-bold mb-2">Panier vide</h1>
+            <p className="text-muted-foreground mb-6">
+              Ajoutez des produits avant de passer commande.
+            </p>
+            <Link
+              href="/"
+              className="inline-block px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition"
+            >
+              Continuer vos achats
+            </Link>
           </div>
         </div>
       </>
@@ -390,6 +524,8 @@ export default function CheckoutPage() {
                     <Loader2 className="w-5 h-5 animate-spin" />
                     Traitement...
                   </>
+                ) : paymentMethod === 'online' ? (
+                  'Continuer vers le paiement'
                 ) : (
                   'Confirmer la commande'
                 )}

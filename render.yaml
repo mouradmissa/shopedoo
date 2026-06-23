@@ -17,6 +17,8 @@ services:
         generateValue: true
       - key: STRIPE_SECRET_KEY
         sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
       - key: FRONTEND_URL
@@ -39,3 +41,5 @@ services:
           type: web
           name: shopedoo-api
           envVarKey: RENDER_EXTERNAL_URL
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        sync: false
