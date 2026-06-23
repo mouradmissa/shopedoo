@@ -13,6 +13,7 @@
     "build:api": "tsc -p backend/tsconfig.json",
     "start": "next start",
     "start:api": "node backend/dist/server.js",
+    "seed:stores": "npm run build:api && node backend/dist/scripts/seedTunisiaStores.js",
     "lint": "eslint ."
   },
   "dependencies": {

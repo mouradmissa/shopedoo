@@ -1,28 +1,8 @@
-export const TUNISIA_GOVERNORATES = [
-  'Ariana',
-  'Béja',
-  'Ben Arous',
-  'Bizerte',
-  'Gabès',
-  'Gafsa',
-  'Jendouba',
-  'Kairouan',
-  'Kasserine',
-  'Kébili',
-  'Kef',
-  'Mahdia',
-  'Manouba',
-  'Médenine',
-  'Monastir',
-  'Nabeul',
-  'Sfax',
-  'Sidi Bouzid',
-  'Siliana',
-  'Sousse',
-  'Tataouine',
-  'Tozeur',
-  'Tunis',
-  'Zaghouan',
-] as const;
-
-export type TunisiaGovernorate = (typeof TUNISIA_GOVERNORATES)[number];
+export {
+  TUNISIA_GOVERNORATES,
+  type TunisiaGovernorate,
+  governorateToEmailSlug,
+  managerEmailForGovernorate,
+  storeNameForGovernorate,
+  storeAddressForGovernorate,
+} from '../backend/data/tunisiaGovernorates';

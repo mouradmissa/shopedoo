@@ -243,6 +243,10 @@ class ApiClient {
   ) {
     return this.request(`/stores/${storeId}/cashiers`, 'POST', data);
   }
+
+  async seedTunisiaStores() {
+    return this.request('/stores/seed/tunisia', 'POST');
+  }
 }
 
 export const apiClient = new ApiClient();

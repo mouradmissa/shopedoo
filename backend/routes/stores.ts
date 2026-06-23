@@ -8,6 +8,7 @@ import {
   AuthRequest,
 } from '../middleware/auth';
 import { canManageStore, getManagerStoreId } from '../utils/storeAccess';
+import { seedTunisiaStores } from '../services/seedTunisiaStores';
 
 const router: Router = express.Router();
 
@@ -21,6 +22,19 @@ router.get('/public', async (_req, res: Response): Promise<void> => {
     res.json(stores);
   } catch {
     res.status(500).json({ error: 'Impossible de charger les boutiques' });
+  }
+});
+
+// Admin: seed all Tunisia governorates (boutique + gérant)
+router.post('/seed/tunisia', authMiddleware, adminMiddleware, async (_req, res: Response): Promise<void> => {
+  try {
+    const result = await seedTunisiaStores();
+    res.json({
+      message: `${result.created} boutique(s) créée(s), ${result.skipped} ignorée(s)`,
+      ...result,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Échec du seed Tunisie', details: String(error) });
   }
 });
 

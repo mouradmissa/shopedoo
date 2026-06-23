@@ -20,6 +20,8 @@ export default function AdminStoresPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState('');
+  const [seeding, setSeeding] = useState(false);
+  const [seedMessage, setSeedMessage] = useState('');
   const [form, setForm] = useState({
     name: '',
     city: '',
@@ -39,6 +41,26 @@ export default function AdminStoresPage() {
     const response = await apiClient.getStores();
     if (response.success) setStores(response.data || []);
     setLoading(false);
+  };
+
+  const handleSeedTunisia = async () => {
+    if (
+      !window.confirm(
+        'Créer une boutique + gérant pour chaque gouvernorat tunisien ?\n\nEmail : ahmed.gerant.{gouvernorat}@shopedoo.com\nMot de passe = même email'
+      )
+    ) {
+      return;
+    }
+    setSeeding(true);
+    setSeedMessage('');
+    const response = await apiClient.seedTunisiaStores();
+    setSeeding(false);
+    if (response.success && response.data) {
+      setSeedMessage(response.data.message || 'Seed terminé');
+      await loadStores();
+    } else {
+      setError(response.error || 'Échec du seed');
+    }
   };
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -94,6 +116,18 @@ export default function AdminStoresPage() {
           <span className="hidden sm:inline">Nouvelle boutique</span>
           <span className="sm:hidden">Ajouter</span>
         </button>
+      </div>
+
+      <div className="mb-6 flex flex-col sm:flex-row gap-3">
+        <button
+          type="button"
+          onClick={handleSeedTunisia}
+          disabled={seeding}
+          className="px-4 py-2 border border-primary text-primary rounded-lg text-sm font-semibold hover:bg-primary/5 disabled:opacity-50"
+        >
+          {seeding ? 'Création en cours...' : 'Générer les 24 boutiques Tunisie'}
+        </button>
+        {seedMessage && <p className="text-sm text-green-700 self-center">{seedMessage}</p>}
       </div>
 
       {loading ? (
