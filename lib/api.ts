@@ -242,6 +242,7 @@ class ApiClient {
     data: { name: string; email: string; password: string; phone?: string }
   ) {
     return this.request(`/stores/${storeId}/cashiers`, 'POST', data);
+  }
 }
 
 export const apiClient = new ApiClient();
