@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { apiClient } from '@/lib/api';
+import { restoreCartAfterLogin, snapshotCartBeforeLogout } from '@/lib/cartSync';
 
 interface User {
   id: string;
@@ -50,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               storeId: data.storeId ? String(data.storeId) : undefined,
               store: data.store,
             });
+            await restoreCartAfterLogin();
           } else {
             apiClient.clearToken();
           }
@@ -70,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (response.success && response.data) {
         apiClient.setToken(response.data.token);
         setUser(response.data.user);
+        await restoreCartAfterLogin();
       } else {
         throw new Error(response.error || 'Signup failed');
       }
@@ -86,6 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         apiClient.setToken(response.data.token);
         const loggedUser = response.data.user as User;
         setUser(loggedUser);
+        await restoreCartAfterLogin();
         return loggedUser;
       } else {
         throw new Error(response.error || 'Signin failed');
@@ -96,6 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    void snapshotCartBeforeLogout();
     setUser(null);
     apiClient.clearToken();
   };

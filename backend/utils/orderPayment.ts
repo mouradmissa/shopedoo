@@ -1,5 +1,6 @@
 import Order from '../models/Order';
 import Product from '../models/Product';
+import { clearCartForUser } from './cart';
 
 export async function fulfillOnlineOrderPayment(orderId: string, stripePaymentId: string) {
   const order = await Order.findById(orderId);
@@ -30,6 +31,8 @@ export async function fulfillOnlineOrderPayment(orderId: string, stripePaymentId
   order.status = 'paid';
   order.stripePaymentId = stripePaymentId;
   await order.save();
+
+  await clearCartForUser(String(order.userId));
 
   return order;
 }

@@ -176,8 +176,11 @@ router.post('/checkout', authMiddleware, async (req: AuthRequest, res: Response)
 
     await order.save();
 
-    cart.items = [];
-    await cart.save();
+    // Panier conservé pour paiement en ligne jusqu'à confirmation Stripe
+    if (!isOnline) {
+      cart.items = [];
+      await cart.save();
+    }
 
     res.status(201).json(order);
   } catch (error) {

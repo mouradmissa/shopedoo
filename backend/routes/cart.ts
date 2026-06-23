@@ -1,4 +1,5 @@
 import express, { Router, Response } from 'express';
+import { Types } from 'mongoose';
 import Cart from '../models/Cart';
 import Product from '../models/Product';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
@@ -116,6 +117,44 @@ router.put('/update/:productId', authMiddleware, async (req: AuthRequest, res: R
     res.json(cart);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update cart' });
+  }
+});
+
+// Fusionner un panier local (après reconnexion)
+router.post('/sync', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { items } = req.body as { items?: Array<{ productId: string; quantity: number }> };
+
+    if (!Array.isArray(items) || items.length === 0) {
+      res.status(400).json({ error: 'Aucun article à synchroniser' });
+      return;
+    }
+
+    let cart = await Cart.findOne({ userId: req.user?.userId });
+    if (!cart) {
+      cart = new Cart({ userId: req.user?.userId, items: [] });
+    }
+
+    for (const row of items) {
+      if (!row.productId || !row.quantity || row.quantity < 1) continue;
+
+      const product = await Product.findById(row.productId);
+      if (!product) continue;
+
+      const existing = cart.items.find((item) => item.productId.toString() === row.productId);
+      if (existing) {
+        existing.quantity = Math.max(existing.quantity, row.quantity);
+      } else {
+        cart.items.push({ productId: new Types.ObjectId(row.productId), quantity: row.quantity });
+      }
+    }
+
+    await cart.save();
+    await cart.populate('items.productId');
+
+    res.json(cart);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to sync cart' });
   }
 });
 

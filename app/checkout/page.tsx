@@ -20,6 +20,7 @@ import { InvoiceQrImage } from '@/components/checkout/InvoiceQrImage';
 import { InvoiceBrandHeader } from '@/components/checkout/InvoiceBrandHeader';
 import { OnlinePaymentStep } from '@/components/checkout/OnlinePaymentStep';
 import { PageTitleBar } from '@/components/layout/PageTitleBar';
+import { clearLocalCart } from '@/lib/cartSync';
 
 interface CartItem {
   productId: {
@@ -119,6 +120,7 @@ export default function CheckoutPage() {
       if (confirm.success && confirm.data) {
         const payload = confirm.data as { order?: Order };
         if (payload.order) {
+          clearLocalCart();
           setOrder({ ...payload.order, paymentMethod: 'online', status: 'paid' });
           setCheckoutStep('done');
           window.history.replaceState({}, '', '/checkout');
@@ -128,6 +130,7 @@ export default function CheckoutPage() {
 
       const orderResponse = await apiClient.getOrder(orderId);
       if (orderResponse.success && orderResponse.data) {
+        clearLocalCart();
         setOrder({ ...(orderResponse.data as Order), paymentMethod: 'online', status: 'paid' });
         setCheckoutStep('done');
         window.history.replaceState({}, '', '/checkout');
@@ -198,9 +201,11 @@ export default function CheckoutPage() {
 
     setOrder(createdOrder);
     setCheckoutStep('done');
+    clearLocalCart();
   };
 
   const handlePaymentSuccess = (paidOrder: { _id: string; status: string; totalAmount: number }) => {
+    clearLocalCart();
     setOrder({
       ...(pendingOrder ?? { shippingAddress: shippingAddress.trim(), paymentMethod: 'online' }),
       _id: paidOrder._id,

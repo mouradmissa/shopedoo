@@ -1,3 +1,5 @@
+import { clearStoredCart, persistCartResponse, type StoredCartItem } from './cartStorage';
+
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/$/, '');
 const API_URL = `${API_BASE}/api`;
 
@@ -150,23 +152,51 @@ class ApiClient {
 
   // Cart endpoints
   async getCart() {
-    return this.request('/cart', 'GET');
+    const response = await this.request('/cart', 'GET');
+    if (response.success && response.data) {
+      persistCartResponse(response.data);
+    }
+    return response;
+  }
+
+  async syncCart(items: StoredCartItem[]) {
+    const response = await this.request('/cart/sync', 'POST', { items });
+    if (response.success && response.data) {
+      persistCartResponse(response.data);
+    }
+    return response;
   }
 
   async addToCart(productId: string, quantity: number) {
-    return this.request('/cart/add', 'POST', { productId, quantity });
+    const response = await this.request('/cart/add', 'POST', { productId, quantity });
+    if (response.success && response.data) {
+      persistCartResponse(response.data);
+    }
+    return response;
   }
 
   async removeFromCart(productId: string) {
-    return this.request(`/cart/remove/${productId}`, 'POST');
+    const response = await this.request(`/cart/remove/${productId}`, 'POST');
+    if (response.success && response.data) {
+      persistCartResponse(response.data);
+    }
+    return response;
   }
 
   async updateCartItem(productId: string, quantity: number) {
-    return this.request(`/cart/update/${productId}`, 'PUT', { quantity });
+    const response = await this.request(`/cart/update/${productId}`, 'PUT', { quantity });
+    if (response.success && response.data) {
+      persistCartResponse(response.data);
+    }
+    return response;
   }
 
   async clearCart() {
-    return this.request('/cart/clear', 'DELETE');
+    const response = await this.request('/cart/clear', 'DELETE');
+    if (response.success) {
+      clearStoredCart();
+    }
+    return response;
   }
 
   // Orders endpoints
