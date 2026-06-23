@@ -33,8 +33,8 @@ export default function AdminStoresPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Boutiques</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Les 24 boutiques Tunisie (gérant + 2 caissiers chacune) sont créées automatiquement au
-          démarrage de l&apos;API
+          Les 24 boutiques Tunisie (gérant, 2 caissiers et catalogue télécom) sont créées
+          automatiquement au démarrage de l&apos;API
         </p>
       </div>
 

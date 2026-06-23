@@ -59,7 +59,7 @@ async function startServer() {
     try {
       const result = await seedTunisiaStores();
       console.log(
-        `Seed Tunisie: ${result.storesCreated} boutique(s), ${result.cashiersCreated} caissier(s) créés`
+        `Seed Tunisie: ${result.storesCreated} boutique(s), ${result.cashiersCreated} caissier(s), ${result.productsCreated} produit(s) créés`
       );
     } catch (error) {
       console.error('Seed Tunisie échoué:', error);

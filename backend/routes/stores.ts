@@ -30,9 +30,10 @@ router.post('/seed/tunisia', authMiddleware, adminMiddleware, async (_req, res: 
   try {
     const result = await seedTunisiaStores();
     res.json({
-      message: `${result.storesCreated} boutique(s), ${result.cashiersCreated} caissier(s) créés`,
+      message: `${result.storesCreated} boutique(s), ${result.cashiersCreated} caissier(s), ${result.productsCreated} produit(s) créés`,
       created: result.storesCreated,
       cashiersCreated: result.cashiersCreated,
+      productsCreated: result.productsCreated,
       skipped: result.skipped,
       details: result.details,
     });

@@ -9,10 +9,12 @@ import {
   cashierEmailForGovernorate,
   cashierDisplayName,
 } from '../data/tunisiaGovernorates';
+import { ensureProductsForStore } from './seedStoreProducts';
 
 export interface SeedTunisiaResult {
   storesCreated: number;
   cashiersCreated: number;
+  productsCreated: number;
   skipped: number;
   details: string[];
 }
@@ -111,6 +113,7 @@ async function ensureStoreForGovernorate(governorate: string): Promise<{
 export async function seedTunisiaStores(): Promise<SeedTunisiaResult> {
   let storesCreated = 0;
   let cashiersCreated = 0;
+  let productsCreated = 0;
   let skipped = 0;
   const details: string[] = [];
 
@@ -130,9 +133,13 @@ export async function seedTunisiaStores(): Promise<SeedTunisiaResult> {
     const cashierResult = await ensureCashiersForStore(String(storeResult.store._id), governorate);
     details.push(...cashierResult.details);
     cashiersCreated += cashierResult.created;
+
+    const productResult = await ensureProductsForStore(storeResult.store._id, governorate);
+    details.push(...productResult.details);
+    productsCreated += productResult.created;
   }
 
-  return { storesCreated, cashiersCreated, skipped, details };
+  return { storesCreated, cashiersCreated, productsCreated, skipped, details };
 }
 
 /** Ajoute les caissiers filler aux boutiques existantes uniquement */
@@ -156,5 +163,5 @@ export async function seedTunisiaCashiers(): Promise<SeedTunisiaResult> {
     cashiersCreated += cashierResult.created;
   }
 
-  return { storesCreated: 0, cashiersCreated, skipped, details };
+  return { storesCreated: 0, cashiersCreated, productsCreated: 0, skipped, details };
 }
