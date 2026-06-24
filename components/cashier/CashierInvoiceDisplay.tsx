@@ -182,9 +182,6 @@ export function CashierInvoiceDisplay({
                 </div>
               )}
 
-              <p className="text-[11px] text-center text-muted-foreground">
-                Données lues depuis le QR du téléphone client
-              </p>
             </div>
           </article>
         </div>

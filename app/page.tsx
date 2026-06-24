@@ -73,14 +73,8 @@ export default function Home() {
         <ShopNav cartCount={cartCount} />
 
         <section className="page-container py-6 sm:py-12 md:py-16">
-          <div className="text-center mb-6 sm:mb-12 space-y-3 sm:space-y-4">
-            <p className="text-lg sm:text-2xl md:text-3xl font-bold text-balance">
-              Bienvenue sur
-            </p>
+          <div className="text-center mb-6 sm:mb-12">
             <ShopEdooLogo variant="hero" className="justify-center mx-auto" />
-            <p className="text-sm sm:text-lg text-muted-foreground text-balance max-w-2xl mx-auto px-2 pt-1">
-              Découvrez nos produits télécom et services avec scan QR innovant
-            </p>
           </div>
 
           {!isAuthenticated && (
@@ -116,13 +110,9 @@ export default function Home() {
 
         <section className="page-container pb-16 sm:pb-20">
           {productsLoading ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Chargement des produits...</p>
-            </div>
+            <div className="py-12" />
           ) : products.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">Aucun produit trouvé</p>
-            </div>
+            <div className="py-12" />
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {products.map((product) => (
@@ -140,9 +130,8 @@ export default function Home() {
 
         <footer className="bg-card border-t border-border mt-12 sm:mt-20 safe-bottom">
           <div className="page-container py-8 sm:py-12">
-            <div className="flex flex-col items-center gap-3 text-muted-foreground text-sm">
+            <div className="flex flex-col items-center gap-3">
               <ShopEdooLogo variant="footer" />
-              <p>&copy; 2024 shopedoo. Tous droits réservés.</p>
             </div>
           </div>
         </footer>

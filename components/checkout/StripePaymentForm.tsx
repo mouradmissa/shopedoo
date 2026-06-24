@@ -80,9 +80,8 @@ export function StripePaymentForm({
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="rounded-xl border border-border bg-background p-4 min-h-[220px]">
         {!isReady && (
-          <div className="flex flex-col items-center justify-center py-10 text-muted-foreground">
-            <Loader2 className="w-8 h-8 animate-spin mb-3 text-primary" />
-            <p className="text-sm">Chargement du formulaire sécurisé...</p>
+          <div className="flex flex-col items-center justify-center py-10">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         )}
         <div className={isReady ? 'block' : 'sr-only'}>

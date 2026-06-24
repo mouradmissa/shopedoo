@@ -150,11 +150,7 @@ export function QRScannerContent() {
           <div className="text-center py-10 sm:py-16">
             <div className="bg-card rounded-2xl border border-border p-6 sm:p-10">
               <Camera className="w-16 h-16 sm:w-20 sm:h-20 text-primary mx-auto mb-4 sm:mb-6 opacity-75" />
-              <h2 className="text-xl sm:text-2xl font-bold mb-3">Scanner un produit</h2>
-              <p className="text-muted-foreground mb-6 sm:mb-8 text-sm sm:text-base">
-                Scannez le QR sur l&apos;étiquette produit : la fiche détail s&apos;ouvre sur votre
-                téléphone et vous pourrez ajouter au panier.
-              </p>
+              <h2 className="text-xl sm:text-2xl font-bold mb-6">Scanner un produit</h2>
               <button
                 type="button"
                 onClick={startScanning}
@@ -189,9 +185,8 @@ export function QRScannerContent() {
             )}
 
             {isLoading && (
-              <div className="flex items-center justify-center gap-2 py-4 text-muted-foreground text-sm">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                Chargement du produit...
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
               </div>
             )}
 

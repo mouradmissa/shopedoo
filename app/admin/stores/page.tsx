@@ -80,13 +80,7 @@ export default function AdminStoresPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6 sm:py-8">
       <div className="flex items-start justify-between gap-3 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">Boutiques</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Gérez les boutiques et leurs gérants. Les 24 boutiques Tunisie sont aussi créées au
-            démarrage de l&apos;API.
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold">Boutiques</h1>
         <button
           type="button"
           onClick={() => setShowForm(true)}
@@ -99,11 +93,12 @@ export default function AdminStoresPage() {
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground">Chargement...</p>
+        <div className="flex justify-center py-16">
+          <Store className="w-8 h-8 text-muted-foreground opacity-50 animate-pulse" />
+        </div>
       ) : stores.length === 0 ? (
         <div className="text-center py-16 bg-card border border-border rounded-xl">
-          <Store className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-          <p className="text-muted-foreground mb-4">Aucune boutique pour le moment.</p>
+          <Store className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
           <button
             type="button"
             onClick={() => setShowForm(true)}

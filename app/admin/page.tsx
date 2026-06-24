@@ -62,10 +62,7 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
       <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-1">Bonjour, {user?.name}</h1>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          Tableau de bord administrateur shopedoo
-        </p>
+        <h1 className="text-2xl sm:text-3xl font-bold">Bonjour, {user?.name}</h1>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
@@ -93,11 +90,7 @@ export default function AdminDashboard() {
           className="bg-card rounded-xl border border-border p-6 hover:border-primary/40 transition group"
         >
           <Store className="w-8 h-8 text-primary mb-4 group-hover:scale-105 transition" />
-          <h2 className="text-lg font-bold mb-2">Boutiques & gérants</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Créer des boutiques en Tunisie et assigner un gérant à chacune.
-          </p>
-          <span className="text-sm font-semibold text-primary">Gérer les boutiques →</span>
+          <h2 className="text-lg font-bold">Boutiques & gérants</h2>
         </Link>
 
         <Link
@@ -105,11 +98,7 @@ export default function AdminDashboard() {
           className="bg-card rounded-xl border border-border p-6 hover:border-primary/40 transition group"
         >
           <Package className="w-8 h-8 text-primary mb-4 group-hover:scale-105 transition" />
-          <h2 className="text-lg font-bold mb-2">Catalogue produits</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Consulter tous les produits ajoutés par les gérants de boutique.
-          </p>
-          <span className="text-sm font-semibold text-primary">Voir les produits →</span>
+          <h2 className="text-lg font-bold">Catalogue produits</h2>
         </Link>
 
         <Link
@@ -117,11 +106,7 @@ export default function AdminDashboard() {
           className="bg-card rounded-xl border border-border p-6 hover:border-primary/40 transition group"
         >
           <ShoppingBag className="w-8 h-8 text-primary mb-4 group-hover:scale-105 transition" />
-          <h2 className="text-lg font-bold mb-2">Commandes clients</h2>
-          <p className="text-sm text-muted-foreground mb-4">
-            Suivre et mettre à jour le statut des commandes.
-          </p>
-          <span className="text-sm font-semibold text-primary">Voir les commandes →</span>
+          <h2 className="text-lg font-bold">Commandes clients</h2>
         </Link>
       </div>
     </div>

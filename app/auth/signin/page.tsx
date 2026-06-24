@@ -49,7 +49,6 @@ export default function SignInPage() {
       <div className="bg-card rounded-2xl border border-border p-6 sm:p-8 shadow-lg">
         <div className="mb-6 sm:mb-8 text-center">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">Connexion</h1>
-          <p className="text-muted-foreground text-sm">Accédez à votre compte shopedoo</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

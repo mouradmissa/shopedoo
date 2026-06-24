@@ -179,12 +179,7 @@ export function ProductDetailView({
             </button>
           )}
 
-          {variant === 'cashier' && (
-            <div className="rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
-              <p className="font-medium text-foreground mb-1">Consultation caissier</p>
-              <p>Cette page est en lecture seule. Informez le client de la disponibilité en magasin.</p>
-            </div>
-          )}
+          {variant === 'cashier' && null}
         </div>
       </div>
 

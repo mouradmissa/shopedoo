@@ -54,7 +54,6 @@ export default function AdminOrdersPage() {
     <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Commandes</h1>
-        <p className="text-sm text-muted-foreground mt-1">Suivi et mise à jour des commandes clients</p>
       </div>
 
       <div className="mobile-scroll-x mb-6">
@@ -79,7 +78,7 @@ export default function AdminOrdersPage() {
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : orders.length === 0 ? (
-        <p className="text-center text-muted-foreground py-16">Aucune commande trouvée.</p>
+        <div className="py-16" />
       ) : (
         <>
           <div className="hidden md:block overflow-x-auto bg-card border border-border rounded-xl">

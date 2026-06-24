@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { apiClient } from '@/lib/api';
 import Link from 'next/link';
-import { Trash2, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { Trash2, ShoppingCart, Plus, Minus, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { formatPrice } from '@/lib/currency';
 import { PageTitleBar } from '@/components/layout/PageTitleBar';
@@ -90,7 +90,7 @@ export default function CartPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <p className="text-muted-foreground">Chargement du panier...</p>
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -108,10 +108,7 @@ export default function CartPage() {
         {!cart || cart.items.length === 0 ? (
           <div className="text-center py-16 sm:py-20">
             <ShoppingCart className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <h2 className="text-xl sm:text-2xl font-bold mb-2">Votre panier est vide</h2>
-            <p className="text-muted-foreground mb-6 text-sm sm:text-base">
-              Ajoutez des produits pour commencer
-            </p>
+            <h2 className="text-xl sm:text-2xl font-bold mb-6">Votre panier est vide</h2>
             <Link
               href="/"
               className="inline-block px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition min-h-11"

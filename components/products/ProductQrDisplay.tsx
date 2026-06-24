@@ -75,7 +75,7 @@ export function ProductQrDisplay({
           </button>
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Image QR en cours de génération...</p>
+        <div className="py-8" />
       )}
     </div>
   );

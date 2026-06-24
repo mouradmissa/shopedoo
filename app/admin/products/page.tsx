@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Trash2, X } from 'lucide-react';
+import { Trash2, X, Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
 import { formatCategory } from '@/lib/productCategories';
@@ -60,21 +60,13 @@ export default function AdminProductsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Produits</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Vue globale du catalogue. Les gérants ajoutent les produits depuis leur espace.
-        </p>
+      <h1 className="text-2xl font-bold">Produits</h1>
       </div>
 
       {isLoading ? (
-        <p className="text-center text-muted-foreground py-12">Chargement...</p>
+        <div className="py-12" />
       ) : products.length === 0 ? (
-        <div className="text-center py-12 bg-card border border-border rounded-xl">
-          <p className="text-muted-foreground">Aucun produit pour le moment.</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Créez une boutique et connectez-vous en tant que gérant pour ajouter des produits.
-          </p>
-        </div>
+        <div className="py-12 bg-card border border-border rounded-xl" />
       ) : (
         <>
           <div className="hidden lg:block overflow-x-auto bg-card border border-border rounded-xl">
@@ -202,7 +194,9 @@ export default function AdminProductsPage() {
               </button>
             </div>
             {qrLoading ? (
-              <p className="text-center text-muted-foreground py-8">Chargement...</p>
+              <div className="flex justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
             ) : qrProduct ? (
               <ProductQrDisplay
                 qrCode={qrProduct.qrCode}

@@ -43,24 +43,11 @@ export function CashierProducts() {
     return () => clearTimeout(timer);
   }, [category, search]);
 
-  const inStock = products.filter((p) => p.stock > 0).length;
-  const outOfStock = products.length - inStock;
-
   return (
     <div className="flex-1 flex flex-col">
       <section className="shrink-0 p-4 sm:p-6 space-y-4">
         <div>
-          <h1 className="text-xl font-bold">Catalogue & disponibilité</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {products.length} produit{products.length !== 1 ? 's' : ''}
-            {products.length > 0 && (
-              <span>
-                {' '}
-                · {inStock} disponible{inStock !== 1 ? 's' : ''}
-                {outOfStock > 0 && ` · ${outOfStock} en rupture`}
-              </span>
-            )}
-          </p>
+        <h1 className="text-xl font-bold">Catalogue & disponibilité</h1>
         </div>
 
         <div className="relative max-w-md">
@@ -98,7 +85,7 @@ export function CashierProducts() {
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : products.length === 0 ? (
-          <p className="text-center text-muted-foreground py-16">Aucun produit trouvé.</p>
+          <div className="py-16" />
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
             {products.map((product) => (

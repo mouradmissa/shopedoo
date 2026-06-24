@@ -41,7 +41,6 @@ export default function SignUpPage() {
       <div className="bg-card rounded-2xl border border-border p-6 sm:p-8 shadow-lg">
         <div className="mb-6 sm:mb-8 text-center">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">Créer un compte</h1>
-          <p className="text-muted-foreground text-sm">Rejoignez shopedoo et commencez vos achats</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -94,7 +93,6 @@ export default function SignUpPage() {
                 className="w-full pl-10 pr-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
               />
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Minimum 6 caractères</p>
           </div>
 
           <button

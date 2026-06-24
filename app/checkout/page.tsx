@@ -55,25 +55,21 @@ type CheckoutStep = 'form' | 'payment' | 'done';
 const PAYMENT_OPTIONS: Array<{
   id: PaymentMethod;
   title: string;
-  description: string;
   icon: typeof Store;
 }> = [
   {
     id: 'cash_register',
     title: 'Paiement à la caisse',
-    description: 'Payez en magasin. Présentez le QR code au caissier.',
     icon: Store,
   },
   {
     id: 'cash_delivery',
     title: 'Espèces à la livraison',
-    description: 'Payez en cash lors de la réception de votre commande.',
     icon: Banknote,
   },
   {
     id: 'online',
     title: 'Paiement en ligne',
-    description: 'Carte bancaire sécurisée via Stripe.',
     icon: CreditCard,
   },
 ];
@@ -246,9 +242,6 @@ export default function CheckoutPage() {
         <div className="page-container py-6 sm:py-8 flex-1">
           <div className="mb-6">
             <h1 className="text-2xl sm:text-3xl font-bold">Paiement en ligne</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Réglez votre commande par carte bancaire en toute sécurité.
-            </p>
           </div>
 
           <OnlinePaymentStep
@@ -277,16 +270,9 @@ export default function CheckoutPage() {
 
             <div className="p-5 sm:p-8 text-center">
               <CheckCircle2 className="w-14 h-14 sm:w-16 sm:h-16 text-green-600 mx-auto mb-4" />
-              <h1 className="text-xl sm:text-3xl font-bold mb-2">
+              <h1 className="text-xl sm:text-3xl font-bold mb-6">
                 {isOnlinePaid ? 'Paiement réussi' : 'Commande confirmée'}
               </h1>
-              <p className="text-muted-foreground text-sm sm:text-base mb-6">
-                {isCashRegister
-                  ? 'Présentez cette facture au caissier pour régler votre commande.'
-                  : isOnlinePaid
-                    ? 'Votre paiement par carte a été accepté. Merci pour votre commande !'
-                    : `Référence #${order._id.slice(-8).toUpperCase()}`}
-              </p>
 
               <div className="rounded-xl bg-muted/50 border border-border p-4 mb-6 text-left space-y-2">
                 <div className="flex justify-between text-sm gap-3">
@@ -319,18 +305,10 @@ export default function CheckoutPage() {
 
               {isCashRegister && invoiceQrValue && (
                 <div className="mb-6">
-                  <p className="font-semibold mb-3 text-sm sm:text-base">QR code à scanner en caisse</p>
                   <div className="flex justify-center mb-3">
                     <InvoiceQrImage value={invoiceQrValue} size={220} />
                   </div>
-                  <p className="text-xs text-muted-foreground break-all px-1">{order.invoiceQrCode}</p>
                 </div>
-              )}
-
-              {!isCashRegister && !isOnlinePaid && (
-                <p className="text-sm text-muted-foreground mb-6">
-                  Votre commande est enregistrée. Vous serez contacté pour la livraison.
-                </p>
               )}
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -355,10 +333,7 @@ export default function CheckoutPage() {
         <div className="flex items-center justify-center px-4 py-16 flex-1">
           <div className="text-center max-w-md">
             <ShoppingBag className="w-16 h-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <h1 className="text-2xl font-bold mb-2">Panier vide</h1>
-            <p className="text-muted-foreground mb-6">
-              Ajoutez des produits avant de passer commande.
-            </p>
+            <h1 className="text-2xl font-bold mb-6">Panier vide</h1>
             <Link
               href="/"
               className="inline-block px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition"
@@ -415,7 +390,6 @@ export default function CheckoutPage() {
                       <Icon className={`w-5 h-5 shrink-0 mt-0.5 ${selected ? 'text-primary' : ''}`} />
                       <div>
                         <p className="font-semibold">{option.title}</p>
-                        <p className="text-sm text-muted-foreground">{option.description}</p>
                       </div>
                     </label>
                   );

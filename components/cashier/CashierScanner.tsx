@@ -187,10 +187,6 @@ export function CashierScanner() {
             <Smartphone className="w-5 h-5 text-primary shrink-0 mt-0.5" />
             <div>
               <p className="font-semibold">Scannez le QR du client</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Le client affiche sa facture QR après commande « paiement à la caisse ».
-                Pointez la caméra vers l&apos;écran.
-              </p>
             </div>
           </div>
           {error && (
@@ -199,9 +195,8 @@ export function CashierScanner() {
             </p>
           )}
           {isScanning && (
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center justify-center py-2">
               <ScanLine className="w-4 h-4 animate-pulse text-primary" />
-              Recherche du QR facture...
             </div>
           )}
         </div>

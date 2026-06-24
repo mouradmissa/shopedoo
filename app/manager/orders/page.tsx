@@ -63,10 +63,6 @@ export default function ManagerOrdersPage() {
     <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Paiements boutique</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Encaissements enregistrés pour{' '}
-          <span className="font-medium text-foreground">{storeName || 'votre boutique'}</span>
-        </p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -102,7 +98,7 @@ export default function ManagerOrdersPage() {
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : orders.length === 0 ? (
-        <p className="text-center text-muted-foreground py-16">Aucun paiement pour cette boutique.</p>
+        <div className="py-16" />
       ) : (
         <div className="space-y-3">
           {orders.map((order) => (

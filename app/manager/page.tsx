@@ -76,7 +76,6 @@ export default function ManagerDashboardPage() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       <h1 className="text-2xl sm:text-3xl font-bold mb-2">Bonjour, {user?.name}</h1>
-      <p className="text-muted-foreground mb-8">Gérez votre boutique shopedoo en Tunisie</p>
 
       {store && (
         <div className="bg-card border border-border rounded-2xl p-5 sm:p-6 mb-8">
@@ -133,9 +132,7 @@ export default function ManagerDashboardPage() {
         </div>
 
         {recentPayments.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-6 text-center">
-            Aucun paiement en boutique enregistré pour {store?.name || 'cette boutique'}.
-          </p>
+          <div className="py-6" />
         ) : (
           <ul className="divide-y divide-border">
             {recentPayments.map((order) => (

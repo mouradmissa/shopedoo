@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Elements } from '@stripe/react-stripe-js';
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
 import { getStripePromise, getStripePublishableKey, stripeAppearance } from '@/lib/stripeClient';
@@ -80,9 +80,8 @@ export function OnlinePaymentStep({ order, returnUrl, onSuccess }: OnlinePayment
 
   if (isBootstrapping) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-        <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-        <p className="font-medium">Préparation du paiement sécurisé...</p>
+      <div className="flex flex-col items-center justify-center py-16">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
       </div>
     );
   }
@@ -91,10 +90,6 @@ export function OnlinePaymentStep({ order, returnUrl, onSuccess }: OnlinePayment
     return (
       <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-5 space-y-4">
         <p className="text-sm text-destructive whitespace-pre-wrap">{error || 'Impossible d’afficher le formulaire de paiement.'}</p>
-        <p className="text-xs text-muted-foreground">
-          Vérifiez que <code className="bg-muted px-1 rounded">STRIPE_SECRET_KEY</code> et{' '}
-          <code className="bg-muted px-1 rounded">STRIPE_PUBLISHABLE_KEY</code> sont configurés sur Render.
-        </p>
         <button
           type="button"
           onClick={() => window.location.reload()}
@@ -109,11 +104,6 @@ export function OnlinePaymentStep({ order, returnUrl, onSuccess }: OnlinePayment
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
       <div className="lg:col-span-3 space-y-4">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
-          <span>Saisissez les informations de votre carte bancaire ci-dessous.</span>
-        </div>
-
         <Elements stripe={stripePromise} options={elementsOptions}>
           <StripePaymentForm
             orderId={order._id}

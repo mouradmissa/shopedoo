@@ -90,14 +90,13 @@ export default function ManagerProductsPage() {
     if (response.success && response.data) setQrProduct(response.data);
   };
 
-  if (loading) return <p className="p-8 text-center text-muted-foreground">Chargement...</p>;
+  if (loading) return <div className="p-8" />;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Produits de la boutique</h1>
-          <p className="text-sm text-muted-foreground">Ajoutez le catalogue visible en ligne</p>
+        <h1 className="text-2xl font-bold">Produits de la boutique</h1>
         </div>
         <button
           type="button"
@@ -207,9 +206,7 @@ export default function ManagerProductsPage() {
         ))}
       </div>
 
-      {products.length === 0 && (
-        <p className="text-center text-muted-foreground py-12">Aucun produit. Ajoutez votre premier article.</p>
-      )}
+      {products.length === 0 && <div className="py-12" />}
 
       {qrProduct && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">

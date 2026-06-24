@@ -46,14 +46,13 @@ export default function ManagerCashiersPage() {
     }
   };
 
-  if (loading) return <p className="p-8 text-center text-muted-foreground">Chargement...</p>;
+  if (loading) return <div className="p-8" />;
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="flex items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold">Comptes caissiers</h1>
-          <p className="text-sm text-muted-foreground">Créez les accès pour encaisser en magasin</p>
         </div>
         <button
           type="button"
@@ -117,9 +116,7 @@ export default function ManagerCashiersPage() {
         ))}
       </div>
 
-      {cashiers.length === 0 && (
-        <p className="text-center text-muted-foreground py-12">Aucun caissier pour cette boutique.</p>
-      )}
+      {cashiers.length === 0 && <div className="py-12" />}
     </div>
   );
 }
