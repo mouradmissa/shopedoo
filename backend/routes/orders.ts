@@ -18,7 +18,6 @@ const orderListPopulate = [
   { path: 'items.productId', select: 'name price storeId' },
 ];
 
-// Caissier : confirmer paiement facture QR (avant /:id)
 router.post('/cashier/invoice/confirm', authMiddleware, cashierOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const invoiceQrCode =
@@ -94,7 +93,6 @@ router.post('/cashier/invoice/confirm', authMiddleware, cashierOrAdminMiddleware
   }
 });
 
-// Gérant : paiements et commandes de sa boutique
 router.get('/manager/mine', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (req.user?.role !== 'manager') {
@@ -125,7 +123,6 @@ router.get('/manager/mine', authMiddleware, async (req: AuthRequest, res: Respon
   }
 });
 
-// Get user's orders
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const orders = await Order.find({ userId: req.user?.userId })
@@ -138,7 +135,6 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response): Promise
   }
 });
 
-// Get single order
 router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const order = await Order.findById(req.params.id).populate(orderListPopulate);
@@ -169,7 +165,6 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response): Prom
   }
 });
 
-// Create order from cart
 router.post('/checkout', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { shippingAddress, paymentMethod } = req.body;
@@ -245,7 +240,6 @@ router.post('/checkout', authMiddleware, async (req: AuthRequest, res: Response)
 
     await order.save();
 
-    // Panier conservé pour paiement en ligne jusqu'à confirmation Stripe
     if (!isOnline) {
       cart.items = [];
       await cart.save();
@@ -257,7 +251,6 @@ router.post('/checkout', authMiddleware, async (req: AuthRequest, res: Response)
   }
 });
 
-// Admin: Get all orders
 router.get('/admin/all', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { status } = req.query;
@@ -275,7 +268,6 @@ router.get('/admin/all', authMiddleware, adminMiddleware, async (req: AuthReques
   }
 });
 
-// Admin: Update order status
 router.put('/:id/status', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { status } = req.body;

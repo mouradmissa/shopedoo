@@ -12,7 +12,6 @@ import { seedTunisiaStores, seedTunisiaCashiers } from '../services/seedTunisiaS
 
 const router: Router = express.Router();
 
-// Public: active stores in Tunisia
 router.get('/public', async (_req, res: Response): Promise<void> => {
   try {
     const stores = await Store.find({ isActive: true })
@@ -25,7 +24,6 @@ router.get('/public', async (_req, res: Response): Promise<void> => {
   }
 });
 
-// Admin: seed all Tunisia governorates (boutique + gérant)
 router.post('/seed/tunisia', authMiddleware, adminMiddleware, async (_req, res: Response): Promise<void> => {
   try {
     const result = await seedTunisiaStores();
@@ -42,7 +40,6 @@ router.post('/seed/tunisia', authMiddleware, adminMiddleware, async (_req, res: 
   }
 });
 
-// Admin: seed cashiers filler for existing Tunisia stores
 router.post('/seed/cashiers', authMiddleware, adminMiddleware, async (_req, res: Response): Promise<void> => {
   try {
     const result = await seedTunisiaCashiers();
@@ -57,7 +54,6 @@ router.post('/seed/cashiers', authMiddleware, adminMiddleware, async (_req, res:
   }
 });
 
-// Admin: list all stores
 router.get('/', authMiddleware, adminMiddleware, async (_req, res: Response): Promise<void> => {
   try {
     const stores = await Store.find()
@@ -70,7 +66,6 @@ router.get('/', authMiddleware, adminMiddleware, async (_req, res: Response): Pr
   }
 });
 
-// Manager: own store
 router.get('/my', authMiddleware, managerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     if (req.user?.role === 'admin') {
@@ -94,7 +89,6 @@ router.get('/my', authMiddleware, managerOrAdminMiddleware, async (req: AuthRequ
   }
 });
 
-// Admin: create store + manager account
 router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { name, city, governorate, address, manager } = req.body as {
@@ -149,7 +143,6 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: 
   }
 });
 
-// Admin or manager: update store
 router.put('/:id', authMiddleware, managerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const storeId = String(req.params.id);
@@ -182,7 +175,6 @@ router.put('/:id', authMiddleware, managerOrAdminMiddleware, async (req: AuthReq
   }
 });
 
-// List cashiers for a store
 router.get('/:id/cashiers', authMiddleware, managerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const storeId = String(req.params.id);
@@ -199,7 +191,6 @@ router.get('/:id/cashiers', authMiddleware, managerOrAdminMiddleware, async (req
   }
 });
 
-// Manager: create cashier for store
 router.post('/:id/cashiers', authMiddleware, managerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const storeId = String(req.params.id);

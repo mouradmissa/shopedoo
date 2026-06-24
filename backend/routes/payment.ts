@@ -54,7 +54,6 @@ async function createOrReusePaymentIntent(
         return existing;
       }
     } catch {
-      // intent invalide — on en crée un nouveau
     }
   }
 

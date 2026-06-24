@@ -142,7 +142,6 @@ export async function seedTunisiaStores(): Promise<SeedTunisiaResult> {
   return { storesCreated, cashiersCreated, productsCreated, skipped, details };
 }
 
-/** Ajoute les caissiers filler aux boutiques existantes uniquement */
 export async function seedTunisiaCashiers(): Promise<SeedTunisiaResult> {
   let cashiersCreated = 0;
   const details: string[] = [];

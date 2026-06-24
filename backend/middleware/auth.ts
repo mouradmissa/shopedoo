@@ -28,7 +28,6 @@ export const optionalAuthMiddleware = (req: AuthRequest, res: Response, next: Ne
     try {
       req.user = verifyToken(token);
     } catch {
-      // ignore invalid token for public routes
     }
   }
   next();

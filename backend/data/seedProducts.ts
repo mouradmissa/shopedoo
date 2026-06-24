@@ -7,7 +7,6 @@ export interface SeedProductTemplate {
   image?: string;
 }
 
-/** Catalogue télécom commun à chaque boutique Shopedoo */
 export const SEED_PRODUCTS: SeedProductTemplate[] = [
   {
     name: 'Samsung Galaxy A15 5G',

@@ -48,7 +48,6 @@ async function createProductWithQr(
   res.status(201).json(product);
 }
 
-// Catalog for shop: grouped availability per Tunisia store
 router.get('/catalog/list', async (req: express.Request, res: Response): Promise<void> => {
   try {
     const { category, search } = req.query;
@@ -69,7 +68,6 @@ router.get('/catalog/list', async (req: express.Request, res: Response): Promise
   }
 });
 
-// Get all products (scoped for staff)
 router.get('/', optionalAuthMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { category, search, storeId } = req.query;

@@ -55,7 +55,6 @@ export default function ProductDetailPage() {
     setIsAdding(false);
 
     if (response.success) {
-      // cart count refreshed by CustomerShell on next navigation
     }
   };
 

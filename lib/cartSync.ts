@@ -6,7 +6,6 @@ import {
   type StoredCartItem,
 } from '@/lib/cartStorage';
 
-/** Restaure le panier sauvegardé après connexion / reconnexion */
 export async function restoreCartAfterLogin(): Promise<void> {
   const localItems = loadCartItems();
 
@@ -24,7 +23,6 @@ export async function restoreCartAfterLogin(): Promise<void> {
   }
 }
 
-/** Sauvegarde le panier serveur en local avant déconnexion */
 export async function snapshotCartBeforeLogout(): Promise<void> {
   const cart = await apiClient.getCart();
   if (cart.success && cart.data) {

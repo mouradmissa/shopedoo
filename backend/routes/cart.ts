@@ -6,7 +6,6 @@ import { authMiddleware, AuthRequest } from '../middleware/auth';
 
 const router: Router = express.Router();
 
-// Get user's cart
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     let cart = await Cart.findOne({ userId: req.user?.userId }).populate('items.productId');
@@ -22,7 +21,6 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response): Promise
   }
 });
 
-// Add item to cart
 router.post('/add', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { productId, quantity } = req.body;
@@ -32,7 +30,6 @@ router.post('/add', authMiddleware, async (req: AuthRequest, res: Response): Pro
       return;
     }
 
-    // Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
       res.status(404).json({ error: 'Product not found' });
@@ -45,7 +42,6 @@ router.post('/add', authMiddleware, async (req: AuthRequest, res: Response): Pro
       cart = new Cart({ userId: req.user?.userId, items: [] });
     }
 
-    // Check if product already in cart
     const existingItem = cart.items.find((item) => item.productId.toString() === productId);
 
     if (existingItem) {
@@ -63,7 +59,6 @@ router.post('/add', authMiddleware, async (req: AuthRequest, res: Response): Pro
   }
 });
 
-// Remove item from cart
 router.post('/remove/:productId', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { productId } = req.params;
@@ -85,7 +80,6 @@ router.post('/remove/:productId', authMiddleware, async (req: AuthRequest, res: 
   }
 });
 
-// Update item quantity
 router.put('/update/:productId', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { productId } = req.params;
@@ -120,7 +114,6 @@ router.put('/update/:productId', authMiddleware, async (req: AuthRequest, res: R
   }
 });
 
-// Fusionner un panier local (après reconnexion)
 router.post('/sync', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { items } = req.body as { items?: Array<{ productId: string; quantity: number }> };
@@ -158,7 +151,6 @@ router.post('/sync', authMiddleware, async (req: AuthRequest, res: Response): Pr
   }
 });
 
-// Clear cart
 router.delete('/clear', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const cart = await Cart.findOne({ userId: req.user?.userId });

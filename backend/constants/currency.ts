@@ -1,7 +1,6 @@
 export const CURRENCY_CODE = 'TND';
 export const CURRENCY_SYMBOL = 'DT';
 
-/** Taux approximatif TND → EUR pour Stripe (affichage reste en DT) */
 const DEFAULT_TND_TO_EUR = 0.29;
 
 export function getStripeCurrency(): string {
@@ -13,7 +12,6 @@ export function toStripeAmount(amountInTnd: number): number {
   const safeAmount = Number.isFinite(amountInTnd) ? amountInTnd : 0;
 
   if (currency === 'tnd') {
-    // millimes — minimum 100 millimes (0,100 DT)
     return Math.max(100, Math.round(safeAmount * 1000));
   }
 
@@ -22,7 +20,6 @@ export function toStripeAmount(amountInTnd: number): number {
     return Math.max(50, Math.round(safeAmount * rate * 100));
   }
 
-  // EUR par défaut (comptes Stripe test internationaux)
   const rate = Number(process.env.STRIPE_TND_TO_EUR_RATE || String(DEFAULT_TND_TO_EUR));
   return Math.max(50, Math.round(safeAmount * rate * 100));
 }

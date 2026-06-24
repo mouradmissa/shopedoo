@@ -31,7 +31,6 @@ const EMAIL_SLUG_OVERRIDES: Partial<Record<TunisiaGovernorate, string>> = {
   Tataouine: 'tataouin',
 };
 
-/** Slug email : ahmed.gerant.{slug}@shopedoo.com */
 export function governorateToEmailSlug(governorate: string): string {
   const override = EMAIL_SLUG_OVERRIDES[governorate as TunisiaGovernorate];
   if (override) return override;
@@ -55,7 +54,6 @@ export function storeAddressForGovernorate(governorate: string): string {
   return `Avenue Habib Bourguiba, ${governorate}`;
 }
 
-/** Prénoms des caissiers filler par boutique */
 export const CASHIER_FILLER_NAMES = ['siwar', 'amira'] as const;
 
 export function cashierEmailForGovernorate(firstName: string, governorate: string): string {

@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, MapPin, Package, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, Loader2, MapPin, Package, ShoppingCart } from 'lucide-react';
 import { formatCategory } from '@/lib/productCategories';
 import { formatPrice } from '@/lib/currency';
 import { ProductQrDisplay } from '@/components/products/ProductQrDisplay';
@@ -42,6 +43,7 @@ export function ProductDetailView({
   canAddToCart = true,
   isAdding = false,
 }: ProductDetailViewProps) {
+  const [showAvailability, setShowAvailability] = useState(false);
   const totalStock = product.totalStock ?? product.stock;
   const stock = stockInfo(totalStock);
   const showCustomerCta = variant === 'customer' && onAddToCart;
@@ -104,32 +106,45 @@ export function ProductDetailView({
           </div>
 
           {storeRows.length > 0 && variant === 'customer' && (
-            <div className="rounded-xl border border-border bg-card p-4">
-              <h2 className="font-semibold mb-3 flex items-center gap-2 text-sm sm:text-base">
-                <MapPin className="w-4 h-4 text-primary" />
-                Disponibilité par boutique (Tunisie)
-              </h2>
-              <ul className="divide-y divide-border">
-                {storeRows.map((row) => (
-                  <li key={row.storeId} className="py-2.5 flex items-center justify-between gap-3 text-sm">
-                    <div className="min-w-0">
-                      <p className="font-medium truncate">{row.storeName}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {row.city} — {row.governorate}
-                      </p>
-                    </div>
-                    <span
-                      className={`shrink-0 text-xs font-semibold px-2 py-1 rounded-full ${
-                        row.stock > 0
-                          ? 'bg-green-500/10 text-green-700'
-                          : 'bg-red-500/10 text-red-600'
-                      }`}
-                    >
-                      {row.stock > 0 ? `${row.stock} en stock` : 'Rupture'}
-                    </span>
-                  </li>
-                ))}
-              </ul>
+            <div className="rounded-xl border border-border bg-card overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setShowAvailability((open) => !open)}
+                className="w-full flex items-center justify-between gap-2 p-4 text-left font-semibold text-sm sm:text-base hover:bg-muted/40 transition"
+              >
+                <span className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  Disponibilité par boutique (Tunisie)
+                </span>
+                {showAvailability ? (
+                  <ChevronUp className="w-5 h-5 shrink-0 text-muted-foreground" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 shrink-0 text-muted-foreground" />
+                )}
+              </button>
+              {showAvailability && (
+                <ul className="divide-y divide-border border-t border-border px-4">
+                  {storeRows.map((row) => (
+                    <li key={row.storeId} className="py-2.5 flex items-center justify-between gap-3 text-sm">
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{row.storeName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {row.city} — {row.governorate}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 text-xs font-semibold px-2 py-1 rounded-full ${
+                          row.stock > 0
+                            ? 'bg-green-500/10 text-green-700'
+                            : 'bg-red-500/10 text-red-600'
+                        }`}
+                      >
+                        {row.stock > 0 ? `${row.stock} en stock` : 'Rupture'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           )}
 

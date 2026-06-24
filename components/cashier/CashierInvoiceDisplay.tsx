@@ -67,7 +67,7 @@ export function CashierInvoiceDisplay({
             </p>
           )}
 
-          {/* Montant à encaisser — mise en avant */}
+          {}
           {!isPaid && (
             <div className="rounded-2xl bg-gradient-to-br from-primary to-primary/85 text-primary-foreground p-6 text-center shadow-lg">
               <p className="text-sm font-medium opacity-90 uppercase tracking-wide">
@@ -82,7 +82,7 @@ export function CashierInvoiceDisplay({
             </div>
           )}
 
-          {/* Facture détaillée */}
+          {}
           <article className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
             <InvoiceBrandHeader orderRef={orderRef} status={isPaid ? 'paid' : 'pending'} />
 

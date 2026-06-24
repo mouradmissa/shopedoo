@@ -118,7 +118,7 @@ export function CashierScanner() {
       startScanning();
     }
     return () => stopScanning();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const confirmPayment = async () => {
     if (!invoice?.invoiceQrCode) return;

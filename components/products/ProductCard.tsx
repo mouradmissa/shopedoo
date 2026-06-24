@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { formatCategory } from '@/lib/productCategories';
 import { formatPrice } from '@/lib/currency';
 
@@ -50,6 +51,7 @@ export function ProductCard({
   canAddToCart = true,
   showAddToCart = true,
 }: ProductCardProps) {
+  const [showAvailability, setShowAvailability] = useState(false);
   const displayStock = product.totalStock ?? product.stock;
   const availableStores =
     product.storeAvailability?.filter((row) => row.stock > 0) ?? [];
@@ -68,10 +70,8 @@ export function ProductCard({
             <div className="text-muted-foreground text-sm">Pas d&apos;image</div>
           )}
           {displayStock > 0 && (
-            <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-[10px] sm:text-xs px-2 py-1 rounded-full max-w-[85%] truncate">
-              {availableStores.length > 0
-                ? `${availableStores.length} boutique${availableStores.length > 1 ? 's' : ''}`
-                : `En stock (${displayStock})`}
+            <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-[10px] sm:text-xs px-2 py-1 rounded-full">
+              En stock
             </div>
           )}
           {displayStock === 0 && (
@@ -91,24 +91,34 @@ export function ProductCard({
         <p className="text-xs text-muted-foreground line-clamp-2 mb-2 flex-1">{product.description}</p>
 
         {availableStores.length > 0 && (
-          <div className="mb-3 space-y-1">
-            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-              <MapPin className="w-3 h-3" />
-              Disponible en Tunisie
-            </p>
-            <ul className="text-[10px] sm:text-xs text-muted-foreground space-y-0.5 max-h-16 overflow-y-auto">
-              {availableStores.slice(0, 3).map((row) => (
-                <li key={row.storeId} className="flex justify-between gap-2">
-                  <span className="truncate">
-                    {row.city} ({row.governorate})
-                  </span>
-                  <span className="shrink-0 text-green-600 font-medium">{row.stock}</span>
-                </li>
-              ))}
-              {availableStores.length > 3 && (
-                <li className="text-primary">+{availableStores.length - 3} autres boutiques</li>
+          <div className="mb-3">
+            <button
+              type="button"
+              onClick={() => setShowAvailability((open) => !open)}
+              className="w-full flex items-center justify-between gap-2 text-xs font-semibold text-primary px-3 py-2 rounded-lg border border-border hover:bg-muted/50 transition"
+            >
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5" />
+                {showAvailability ? 'Masquer la disponibilité' : 'Voir disponibilité par gouvernorat'}
+              </span>
+              {showAvailability ? (
+                <ChevronUp className="w-4 h-4 shrink-0" />
+              ) : (
+                <ChevronDown className="w-4 h-4 shrink-0" />
               )}
-            </ul>
+            </button>
+            {showAvailability && (
+              <ul className="mt-2 text-[10px] sm:text-xs text-muted-foreground space-y-1 max-h-32 overflow-y-auto rounded-lg border border-border p-2 bg-muted/30">
+                {availableStores.map((row) => (
+                  <li key={row.storeId} className="flex justify-between gap-2">
+                    <span className="truncate">
+                      {row.city} ({row.governorate})
+                    </span>
+                    <span className="shrink-0 text-green-600 font-medium">{row.stock}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 

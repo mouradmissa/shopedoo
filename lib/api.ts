@@ -97,7 +97,6 @@ class ApiClient {
     }
   }
 
-  // Auth endpoints
   async signup(email: string, password: string, name: string) {
     return this.request('/auth/signup', 'POST', { email, password, name });
   }
@@ -110,7 +109,6 @@ class ApiClient {
     return this.request('/auth/me', 'GET');
   }
 
-  // Products endpoints
   async getProductCatalog(category?: string, search?: string) {
     let url = '/products/catalog/list';
     const params = new URLSearchParams();
@@ -150,7 +148,6 @@ class ApiClient {
     return this.request(`/products/${id}`, 'DELETE');
   }
 
-  // Cart endpoints
   async getCart() {
     const response = await this.request('/cart', 'GET');
     if (response.success && response.data) {
@@ -199,7 +196,6 @@ class ApiClient {
     return response;
   }
 
-  // Orders endpoints
   async getOrders() {
     return this.request('/orders', 'GET');
   }
@@ -228,7 +224,6 @@ class ApiClient {
     return this.request(`/orders/${id}/status`, 'PUT', { status });
   }
 
-  // Payment endpoints
   async getPaymentConfig() {
     return this.request<{ publishableKey: string; currency: string }>('/payment/config', 'GET');
   }
@@ -252,7 +247,6 @@ class ApiClient {
     return this.request('/orders/cashier/invoice/confirm', 'POST', { invoiceQrCode: qrCode });
   }
 
-  // Stores endpoints
   async getPublicStores() {
     return this.request('/stores/public', 'GET');
   }
