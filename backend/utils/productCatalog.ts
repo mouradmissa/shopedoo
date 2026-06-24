@@ -1,4 +1,5 @@
 import Product from '../models/Product';
+import { buildProductImageUrl } from './productImage';
 
 export interface StoreAvailability {
   storeId: string;
@@ -24,7 +25,7 @@ export interface CatalogProduct {
 export async function buildProductCatalog(filter: Record<string, unknown> = {}) {
   const products = await Product.find(filter)
     .populate('storeId', 'name city governorate isActive')
-    .select('-__v -qrCodeImage')
+    .select('-__v -qrCodeImage -imageData')
     .lean();
 
   const catalogMap = new Map<string, CatalogProduct>();
@@ -37,13 +38,17 @@ export async function buildProductCatalog(filter: Record<string, unknown> = {}) 
       | undefined;
 
     if (!catalogMap.has(key)) {
+      const imageUrl = product.imageStored
+        ? buildProductImageUrl(String(product._id))
+        : product.image;
+
       catalogMap.set(key, {
         _id: String(product._id),
         name: product.name,
         description: product.description,
         price: product.price,
         category: product.category,
-        image: product.image,
+        image: imageUrl,
         totalStock: 0,
         storeAvailability: [],
       });

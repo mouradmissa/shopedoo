@@ -196,4 +196,108 @@
   .mobile-scroll-x::-webkit-scrollbar {
     display: none;
   }
+
+  .shop-page-bg {
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--primary) 4%, var(--background)) 0%,
+      var(--background) 120px,
+      var(--background) 100%
+    );
+  }
+
+  .shop-header {
+    @apply bg-background/98 backdrop-blur-md border-b-2 border-primary/15;
+  }
+
+  .shop-promo-bar {
+    background: linear-gradient(90deg, var(--secondary) 0%, #003366 50%, var(--secondary) 100%);
+  }
+
+  .shop-hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--primary) 8%, var(--background)) 0%,
+      var(--background) 45%,
+      color-mix(in srgb, var(--secondary) 6%, var(--background)) 100%
+    );
+  }
+
+  .shop-hero::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    right: -10%;
+    width: min(520px, 80vw);
+    height: min(520px, 80vw);
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--primary) 18%, transparent) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .shop-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -5%;
+    width: min(400px, 60vw);
+    height: min(400px, 60vw);
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--secondary) 15%, transparent) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .shop-hero-inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  .shop-badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide;
+    background: color-mix(in srgb, var(--primary) 12%, var(--background));
+    color: var(--primary);
+    border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
+  }
+
+  .shop-stat-card {
+    @apply rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-4 sm:p-5 text-center shadow-sm hover:shadow-md hover:border-primary/30 transition duration-300;
+  }
+
+  .shop-feature-card {
+    @apply rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition duration-300;
+  }
+
+  .shop-footer {
+    @apply bg-card;
+  }
+
+  .shop-footer-promo {
+    background: linear-gradient(135deg, var(--secondary) 0%, #003d6b 50%, var(--primary) 100%);
+  }
+
+  .shop-footer-main {
+    @apply bg-gradient-to-b from-card to-muted/30;
+  }
+
+  .shop-section-title {
+    @apply text-2xl sm:text-3xl font-bold tracking-tight;
+  }
+
+  .shop-section-subtitle {
+    @apply text-muted-foreground text-sm sm:text-base mt-2 max-w-2xl;
+  }
+
+  .shop-cta-primary {
+    @apply inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-3.5 bg-primary text-primary-foreground rounded-xl font-bold hover:opacity-90 transition min-h-12 shadow-lg shadow-primary/25;
+  }
+
+  .shop-cta-secondary {
+    @apply inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-3.5 border-2 border-secondary text-secondary rounded-xl font-bold hover:bg-secondary hover:text-secondary-foreground transition min-h-12;
+  }
+
+  .shop-category-pill {
+    @apply shrink-0 px-4 py-2.5 rounded-full whitespace-nowrap font-semibold text-sm transition min-h-11;
+  }
 }

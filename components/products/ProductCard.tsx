@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { formatCategory } from '@/lib/productCategories';
 import { formatPrice } from '@/lib/currency';
+import { resolveProductImageUrl } from '@/lib/productImage';
 
 export interface StoreAvailability {
   storeId: string;
@@ -55,14 +56,15 @@ export function ProductCard({
   const displayStock = product.totalStock ?? product.stock;
   const availableStores =
     product.storeAvailability?.filter((row) => row.stock > 0) ?? [];
+  const imageSrc = resolveProductImageUrl(product.image, product._id);
 
   return (
-    <div className="group bg-card rounded-xl overflow-hidden hover:shadow-lg transition duration-300 border border-border hover:border-primary/50 flex flex-col h-full">
+    <div className="group bg-card rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-primary/10 transition duration-300 border border-border hover:border-primary/40 flex flex-col h-full">
       <Link href={detailHref} className="block">
         <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden relative">
-          {product.image ? (
+          {imageSrc ? (
             <img
-              src={product.image}
+              src={imageSrc}
               alt={product.name}
               className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
             />
@@ -137,7 +139,7 @@ export function ProductCard({
               type="button"
               onClick={() => onAddToCart(pickProductIdForCart(product))}
               disabled={displayStock === 0 || !canAddToCart}
-              className="flex-1 min-h-11 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium text-sm hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 min-h-11 py-2.5 bg-primary text-primary-foreground rounded-xl font-semibold text-sm hover:opacity-90 hover:shadow-md hover:shadow-primary/20 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Panier
             </button>

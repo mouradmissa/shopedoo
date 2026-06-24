@@ -3,19 +3,45 @@ import { Types } from 'mongoose';
 import Cart from '../models/Cart';
 import Product from '../models/Product';
 import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { sanitizeProductForClient } from '../utils/productImage';
 
 const router: Router = express.Router();
 
+const POPULATE_PRODUCT = {
+  path: 'items.productId',
+  select: '-imageData -qrCodeImage -qrCodePayload',
+};
+
+function serializeCart(cart: InstanceType<typeof Cart>) {
+  const json = cart.toObject() as unknown as {
+    items: Array<{ productId: unknown; quantity: number }>;
+    [key: string]: unknown;
+  };
+
+  json.items = json.items.map((item) => {
+    const product = item.productId;
+    if (product && typeof product === 'object' && product !== null && '_id' in product) {
+      return {
+        ...item,
+        productId: sanitizeProductForClient(product as { _id: unknown }),
+      };
+    }
+    return item;
+  });
+
+  return json;
+}
+
 router.get('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    let cart = await Cart.findOne({ userId: req.user?.userId }).populate('items.productId');
+    let cart = await Cart.findOne({ userId: req.user?.userId }).populate(POPULATE_PRODUCT);
 
     if (!cart) {
       cart = new Cart({ userId: req.user?.userId, items: [] });
       await cart.save();
     }
 
-    res.json(cart);
+    res.json(serializeCart(cart));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch cart' });
   }
@@ -51,9 +77,9 @@ router.post('/add', authMiddleware, async (req: AuthRequest, res: Response): Pro
     }
 
     await cart.save();
-    await cart.populate('items.productId');
+    await cart.populate(POPULATE_PRODUCT);
 
-    res.json(cart);
+    res.json(serializeCart(cart));
   } catch (error) {
     res.status(500).json({ error: 'Failed to add item to cart' });
   }
@@ -72,9 +98,9 @@ router.post('/remove/:productId', authMiddleware, async (req: AuthRequest, res: 
 
     cart.items = cart.items.filter((item) => item.productId.toString() !== productId);
     await cart.save();
-    await cart.populate('items.productId');
+    await cart.populate(POPULATE_PRODUCT);
 
-    res.json(cart);
+    res.json(serializeCart(cart));
   } catch (error) {
     res.status(500).json({ error: 'Failed to remove item from cart' });
   }
@@ -106,9 +132,9 @@ router.put('/update/:productId', authMiddleware, async (req: AuthRequest, res: R
 
     item.quantity = quantity;
     await cart.save();
-    await cart.populate('items.productId');
+    await cart.populate(POPULATE_PRODUCT);
 
-    res.json(cart);
+    res.json(serializeCart(cart));
   } catch (error) {
     res.status(500).json({ error: 'Failed to update cart' });
   }
@@ -143,9 +169,9 @@ router.post('/sync', authMiddleware, async (req: AuthRequest, res: Response): Pr
     }
 
     await cart.save();
-    await cart.populate('items.productId');
+    await cart.populate(POPULATE_PRODUCT);
 
-    res.json(cart);
+    res.json(serializeCart(cart));
   } catch (error) {
     res.status(500).json({ error: 'Failed to sync cart' });
   }
@@ -163,7 +189,7 @@ router.delete('/clear', authMiddleware, async (req: AuthRequest, res: Response):
     cart.items = [];
     await cart.save();
 
-    res.json(cart);
+    res.json(serializeCart(cart));
   } catch (error) {
     res.status(500).json({ error: 'Failed to clear cart' });
   }

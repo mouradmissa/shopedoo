@@ -3,17 +3,37 @@ import Product from '../models/Product';
 import QRCode from '../models/QRCode';
 import {
   authMiddleware,
-  adminMiddleware,
   managerOrAdminMiddleware,
   optionalAuthMiddleware,
   AuthRequest,
 } from '../middleware/auth';
+import { productImageUpload } from '../middleware/upload';
 import { generateProductQrImage, ensureProductQrImage, getProductPageUrl } from '../utils/productQr';
 import { buildProductCatalog, getProductWithAvailability } from '../utils/productCatalog';
 import { resolveUserStoreId } from '../utils/storeAccess';
+import {
+  buildProductImageUrl,
+  hasStoredImage,
+  sanitizeProductForClient,
+} from '../utils/productImage';
 import { v4 as uuidv4 } from 'uuid';
 
 const router: Router = express.Router();
+
+const PRODUCT_LIST_SELECT = '-__v -qrCodeImage -imageData';
+
+async function attachUploadedImage(
+  product: InstanceType<typeof Product>,
+  file?: Express.Multer.File
+) {
+  if (!file?.buffer?.length) return;
+
+  product.imageData = file.buffer;
+  product.imageMimeType = file.mimetype;
+  product.imageStored = true;
+  product.image = buildProductImageUrl(product._id);
+  await product.save();
+}
 
 async function createProductWithQr(
   data: {
@@ -22,9 +42,9 @@ async function createProductWithQr(
     price: number;
     category: string;
     stock: number;
-    image?: string;
     storeId?: string;
   },
+  file: Express.Multer.File | undefined,
   res: Response
 ) {
   const product = new Product(data);
@@ -45,7 +65,9 @@ async function createProductWithQr(
   product.qrCodeImage = qrCodeImage;
   await product.save();
 
-  res.status(201).json(product);
+  await attachUploadedImage(product, file);
+
+  res.status(201).json(sanitizeProductForClient(product));
 }
 
 router.get('/catalog/list', async (req: express.Request, res: Response): Promise<void> => {
@@ -92,8 +114,12 @@ router.get('/', optionalAuthMiddleware, async (req: AuthRequest, res: Response):
 
     const products = await Product.find(filter)
       .populate('storeId', 'name city governorate')
-      .select('-__v -qrCodeImage');
-    res.json(products);
+      .select(PRODUCT_LIST_SELECT)
+      .lean();
+
+    res.json(
+      products.map((product) => sanitizeProductForClient(product as { _id: unknown }))
+    );
   } catch {
     res.status(500).json({ error: 'Failed to fetch products' });
   }
@@ -112,9 +138,41 @@ router.get('/qr/:qrCode', async (req: express.Request, res: Response): Promise<v
     qrRecord.lastScannedAt = new Date();
     await qrRecord.save();
 
-    res.json(qrRecord.productId);
+    const populated = qrRecord.productId as unknown;
+    if (!populated || typeof populated !== 'object' || !('toObject' in populated)) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
+    res.json(sanitizeProductForClient(populated as { _id: unknown; toObject?: () => Record<string, unknown> }));
   } catch {
     res.status(500).json({ error: 'Failed to fetch product' });
+  }
+});
+
+router.get('/:id/image', async (req: express.Request, res: Response): Promise<void> => {
+  try {
+    const product = await Product.findById(req.params.id).select('imageData imageMimeType image');
+    if (!product) {
+      res.status(404).json({ error: 'Product not found' });
+      return;
+    }
+
+    if (hasStoredImage(product)) {
+      res.set('Content-Type', product.imageMimeType || 'image/jpeg');
+      res.set('Cache-Control', 'public, max-age=86400, immutable');
+      res.send(product.imageData);
+      return;
+    }
+
+    if (product.image?.startsWith('http://') || product.image?.startsWith('https://')) {
+      res.redirect(product.image);
+      return;
+    }
+
+    res.status(404).json({ error: 'Image not available' });
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch product image' });
   }
 });
 
@@ -153,7 +211,7 @@ router.get('/:id', async (req: express.Request, res: Response): Promise<void> =>
 
     await ensureProductQrImage(result.product);
 
-    const productJson = result.product.toObject();
+    const productJson = sanitizeProductForClient(result.product);
     res.json({
       ...productJson,
       storeAvailability: result.storeAvailability,
@@ -164,76 +222,92 @@ router.get('/:id', async (req: express.Request, res: Response): Promise<void> =>
   }
 });
 
-router.post('/', authMiddleware, managerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { name, description, price, category, stock, image, storeId } = req.body;
+router.post(
+  '/',
+  authMiddleware,
+  managerOrAdminMiddleware,
+  productImageUpload.single('image'),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { name, description, price, category, stock, storeId } = req.body;
 
-    if (!name || !description || price === undefined || !category) {
-      res.status(400).json({ error: 'Missing required fields' });
-      return;
-    }
-
-    let targetStoreId = storeId as string | undefined;
-
-    if (req.user?.role === 'manager') {
-      targetStoreId = (await resolveUserStoreId(req)) ?? undefined;
-      if (!targetStoreId) {
-        res.status(400).json({ error: 'Aucune boutique assignée au gérant' });
+      if (!name || !description || price === undefined || !category) {
+        res.status(400).json({ error: 'Missing required fields' });
         return;
       }
-    } else if (!targetStoreId) {
-      res.status(400).json({ error: 'storeId requis pour créer un produit' });
-      return;
-    }
 
-    await createProductWithQr(
-      {
-        name,
-        description,
-        price,
-        category,
-        stock: stock || 0,
-        image,
-        storeId: targetStoreId,
-      },
-      res
-    );
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create product', details: String(error) });
-  }
-});
+      let targetStoreId = storeId as string | undefined;
 
-router.put('/:id', authMiddleware, managerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { name, description, price, category, stock, image } = req.body;
-
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      res.status(404).json({ error: 'Product not found' });
-      return;
-    }
-
-    if (req.user?.role === 'manager') {
-      const managerStoreId = await resolveUserStoreId(req);
-      if (!managerStoreId || String(product.storeId) !== managerStoreId) {
-        res.status(403).json({ error: 'Produit hors de votre boutique' });
+      if (req.user?.role === 'manager') {
+        targetStoreId = (await resolveUserStoreId(req)) ?? undefined;
+        if (!targetStoreId) {
+          res.status(400).json({ error: 'Aucune boutique assignée au gérant' });
+          return;
+        }
+      } else if (!targetStoreId) {
+        res.status(400).json({ error: 'storeId requis pour créer un produit' });
         return;
       }
+
+      await createProductWithQr(
+        {
+          name,
+          description,
+          price: parseFloat(String(price)),
+          category,
+          stock: parseInt(String(stock), 10) || 0,
+          storeId: targetStoreId,
+        },
+        req.file,
+        res
+      );
+    } catch (error) {
+      res.status(500).json({ error: 'Failed to create product', details: String(error) });
     }
-
-    if (name) product.name = name;
-    if (description) product.description = description;
-    if (price !== undefined) product.price = price;
-    if (category) product.category = category;
-    if (stock !== undefined) product.stock = stock;
-    if (image) product.image = image;
-
-    await product.save();
-    res.json(product);
-  } catch {
-    res.status(500).json({ error: 'Failed to update product' });
   }
-});
+);
+
+router.put(
+  '/:id',
+  authMiddleware,
+  managerOrAdminMiddleware,
+  productImageUpload.single('image'),
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { name, description, price, category, stock } = req.body;
+
+      const product = await Product.findById(req.params.id);
+      if (!product) {
+        res.status(404).json({ error: 'Product not found' });
+        return;
+      }
+
+      if (req.user?.role === 'manager') {
+        const managerStoreId = await resolveUserStoreId(req);
+        if (!managerStoreId || String(product.storeId) !== managerStoreId) {
+          res.status(403).json({ error: 'Produit hors de votre boutique' });
+          return;
+        }
+      }
+
+      if (name) product.name = name;
+      if (description) product.description = description;
+      if (price !== undefined) product.price = parseFloat(String(price));
+      if (category) product.category = category;
+      if (stock !== undefined) product.stock = parseInt(String(stock), 10);
+
+      await product.save();
+
+      if (req.file) {
+        await attachUploadedImage(product, req.file);
+      }
+
+      res.json(sanitizeProductForClient(product));
+    } catch {
+      res.status(500).json({ error: 'Failed to update product' });
+    }
+  }
+);
 
 router.delete('/:id', authMiddleware, managerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {

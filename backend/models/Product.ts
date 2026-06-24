@@ -7,6 +7,9 @@ export interface IProduct extends Document {
   category: string;
   stock: number;
   image: string;
+  imageData?: Buffer;
+  imageMimeType?: string;
+  imageStored?: boolean;
   storeId?: Types.ObjectId;
   qrCode: string;
   qrCodeImage?: string;
@@ -23,6 +26,9 @@ const productSchema = new Schema<IProduct>(
     category: { type: String, required: true },
     stock: { type: Number, required: true, default: 0, min: 0 },
     image: String,
+    imageData: { type: Buffer },
+    imageMimeType: { type: String, default: 'image/jpeg' },
+    imageStored: { type: Boolean, default: false },
     storeId: { type: Schema.Types.ObjectId, ref: 'Store' },
     qrCode: { type: String, unique: true, sparse: true },
     qrCodeImage: String,

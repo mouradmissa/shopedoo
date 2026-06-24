@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { apiClient } from '@/lib/api';
 import { ShopNav } from '@/components/layout/ShopNav';
+import { ShopFooter } from '@/components/layout/ShopFooter';
 
 export function CustomerShell({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -19,9 +20,10 @@ export function CustomerShell({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card flex flex-col">
+    <div className="min-h-screen shop-page-bg flex flex-col">
       <ShopNav cartCount={cartCount} />
       <main className="flex-1 flex flex-col">{children}</main>
+      <ShopFooter />
     </div>
   );
 }

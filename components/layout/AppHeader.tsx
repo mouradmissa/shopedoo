@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { LogOut } from 'lucide-react';
 import { ShopEdooLogo } from '@/components/brand/ShopEdooLogo';
+import { cn } from '@/lib/utils';
 
 interface AppHeaderProps {
   logoHref: string;
@@ -10,6 +11,8 @@ interface AppHeaderProps {
   center?: ReactNode;
   trailing?: ReactNode;
   mobileNav?: ReactNode;
+  promoBar?: ReactNode;
+  tone?: 'default' | 'shop';
   onLogout?: () => void;
   userName?: string;
   userSubtitle?: string;
@@ -21,18 +24,40 @@ export function AppHeader({
   center,
   trailing,
   mobileNav,
+  promoBar,
+  tone = 'default',
   onLogout,
   userName,
   userSubtitle,
 }: AppHeaderProps) {
+  const isShop = tone === 'shop';
+
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-border safe-top">
-      <div className="page-container h-14 sm:h-16 flex items-center justify-between gap-2 sm:gap-3">
+    <header
+      className={cn(
+        'sticky top-0 z-50 safe-top',
+        isShop
+          ? 'shop-header shadow-md shadow-primary/5'
+          : 'bg-background/95 backdrop-blur border-b border-border'
+      )}
+    >
+      {promoBar}
+      <div
+        className={cn(
+          'page-container flex items-center justify-between gap-2 sm:gap-3',
+          isShop ? 'h-16 sm:h-[4.5rem] py-2' : 'h-14 sm:h-16'
+        )}
+      >
         <ShopEdooLogo
           href={logoHref}
           variant="nav"
           suffix={
-            <span className="font-semibold text-xs sm:text-sm text-muted-foreground hidden sm:inline truncate max-w-[88px] md:max-w-none">
+            <span
+              className={cn(
+                'font-semibold text-xs sm:text-sm hidden sm:inline truncate max-w-[88px] md:max-w-none',
+                isShop ? 'text-primary font-bold' : 'text-muted-foreground'
+              )}
+            >
               {sectionLabel}
             </span>
           }

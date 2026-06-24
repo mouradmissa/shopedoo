@@ -6,6 +6,8 @@ import { apiClient } from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
 import { PRODUCT_CATEGORIES, CATEGORY_LABELS } from '@/lib/productCategories';
 import { ProductQrDisplay } from '@/components/products/ProductQrDisplay';
+import { ProductImageUpload } from '@/components/products/ProductImageUpload';
+import { resolveProductImageUrl } from '@/lib/productImage';
 
 interface Product {
   _id: string;
@@ -26,13 +28,13 @@ export default function ManagerProductsPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [qrProduct, setQrProduct] = useState<Product | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     category: PRODUCT_CATEGORIES[0],
     stock: '',
-    image: '',
   });
 
   useEffect(() => {
@@ -51,15 +53,17 @@ export default function ManagerProductsPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await apiClient.createProduct({
-      name: formData.name,
-      description: formData.description,
-      price: parseFloat(formData.price),
-      category: formData.category,
-      stock: parseInt(formData.stock, 10) || 0,
-      image: formData.image,
-      storeId,
-    });
+    const response = await apiClient.createProduct(
+      {
+        name: formData.name,
+        description: formData.description,
+        price: parseFloat(formData.price),
+        category: formData.category,
+        stock: parseInt(formData.stock, 10) || 0,
+        storeId,
+      },
+      imageFile
+    );
 
     if (response.success && response.data) {
       setProducts([response.data, ...products]);
@@ -69,8 +73,8 @@ export default function ManagerProductsPage() {
         price: '',
         category: PRODUCT_CATEGORIES[0],
         stock: '',
-        image: '',
       });
+      setImageFile(null);
       setShowForm(false);
     } else {
       alert(response.error || 'Erreur création produit');
@@ -155,12 +159,7 @@ export default function ManagerProductsPage() {
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             className="w-full px-4 py-3 border border-border rounded-lg bg-background resize-none"
           />
-          <input
-            placeholder="URL image (optionnel)"
-            value={formData.image}
-            onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-            className="w-full px-4 py-3 border border-border rounded-lg bg-background"
-          />
+          <ProductImageUpload value={imageFile} onChange={setImageFile} />
           <div className="flex gap-2">
             <button type="submit" className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-semibold">
               Enregistrer
@@ -176,7 +175,11 @@ export default function ManagerProductsPage() {
         {products.map((product) => (
           <div key={product._id} className="bg-card border border-border rounded-xl p-4 flex gap-4">
             {product.image ? (
-              <img src={product.image} alt="" className="w-20 h-20 rounded-lg object-cover bg-muted shrink-0" />
+              <img
+                src={resolveProductImageUrl(product.image, product._id)}
+                alt=""
+                className="w-20 h-20 rounded-lg object-cover bg-muted shrink-0"
+              />
             ) : (
               <div className="w-20 h-20 rounded-lg bg-muted shrink-0" />
             )}

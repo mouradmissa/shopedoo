@@ -3,6 +3,8 @@ import { clearStoredCart, persistCartResponse, type StoredCartItem } from './car
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/$/, '');
 const API_URL = `${API_BASE}/api`;
 
+export { API_BASE };
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;
@@ -56,6 +58,46 @@ class ApiClient {
     }
 
     return headers;
+  }
+
+  private getAuthHeaders(): HeadersInit {
+    this.syncTokenFromStorage();
+    const headers: HeadersInit = {};
+    if (this.token) {
+      headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    return headers;
+  }
+
+  private async requestForm<T>(
+    endpoint: string,
+    method: string,
+    formData: FormData
+  ): Promise<ApiResponse<T>> {
+    try {
+      const url = `${API_URL}${endpoint}`;
+      const response = await fetch(url, {
+        method,
+        headers: this.getAuthHeaders(),
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || 'An error occurred',
+          details: data.details,
+        };
+      }
+
+      return { success: true, data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Network error',
+      };
+    }
   }
 
   async request<T>(
@@ -136,11 +178,52 @@ class ApiClient {
     return this.request(`/products/qr/${qrCode}`, 'GET');
   }
 
-  async createProduct(data: any) {
+  async createProduct(
+    data: {
+      name: string;
+      description: string;
+      price: number;
+      category: string;
+      stock: number;
+      storeId?: string;
+    },
+    imageFile?: File | null
+  ) {
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('description', data.description);
+      formData.append('price', String(data.price));
+      formData.append('category', data.category);
+      formData.append('stock', String(data.stock));
+      if (data.storeId) formData.append('storeId', data.storeId);
+      formData.append('image', imageFile);
+      return this.requestForm('/products', 'POST', formData);
+    }
     return this.request('/products', 'POST', data);
   }
 
-  async updateProduct(id: string, data: any) {
+  async updateProduct(
+    id: string,
+    data: Partial<{
+      name: string;
+      description: string;
+      price: number;
+      category: string;
+      stock: number;
+    }>,
+    imageFile?: File | null
+  ) {
+    if (imageFile) {
+      const formData = new FormData();
+      if (data.name) formData.append('name', data.name);
+      if (data.description) formData.append('description', data.description);
+      if (data.price !== undefined) formData.append('price', String(data.price));
+      if (data.category) formData.append('category', data.category);
+      if (data.stock !== undefined) formData.append('stock', String(data.stock));
+      formData.append('image', imageFile);
+      return this.requestForm(`/products/${id}`, 'PUT', formData);
+    }
     return this.request(`/products/${id}`, 'PUT', data);
   }
 
