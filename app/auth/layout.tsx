@@ -1,13 +1,11 @@
 import Link from 'next/link';
 import { ShopEdooLogo } from '@/components/brand/ShopEdooLogo';
-import { ShopPromoBar } from '@/components/layout/ShopPromoBar';
 import { ShopFooter } from '@/components/layout/ShopFooter';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen shop-page-bg flex flex-col">
       <header className="shop-header sticky top-0 z-50 safe-top shadow-md shadow-primary/5">
-        <ShopPromoBar />
         <div className="page-container h-16 sm:h-[4.5rem] flex items-center justify-between">
           <ShopEdooLogo
             href="/"

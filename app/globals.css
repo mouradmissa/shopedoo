@@ -218,11 +218,6 @@
     @apply bg-background/98 backdrop-blur-md border-b-2 border-primary/15;
   }
 
-  .shop-promo-bar {
-    background: linear-gradient(90deg, var(--offer) 0%, #e6b800 50%, var(--offer) 100%);
-    color: var(--offer-foreground);
-  }
-
   .shop-hero {
     position: relative;
     overflow: hidden;
@@ -280,10 +275,6 @@
 
   .shop-footer {
     @apply bg-card;
-  }
-
-  .shop-footer-promo {
-    background: linear-gradient(135deg, var(--primary) 0%, #0f0f0f 50%, var(--primary) 100%);
   }
 
   .shop-offer-banner {

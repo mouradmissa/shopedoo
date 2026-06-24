@@ -12,35 +12,6 @@ const TRUST_ITEMS = [
 export function ShopFooter() {
   return (
     <footer className="shop-footer safe-bottom mt-auto">
-      <div className="shop-footer-promo">
-        <div className="page-container py-10 sm:py-12 text-center">
-          <p className="text-primary-foreground/90 text-sm font-semibold uppercase tracking-widest mb-2">
-            Prêt à commander ?
-          </p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-primary-foreground text-balance max-w-2xl mx-auto mb-4">
-            Votre prochain forfait ou accessoire est à un clic
-          </h2>
-          <p className="text-primary-foreground/80 text-sm sm:text-base max-w-xl mx-auto mb-6">
-            Créez votre compte gratuitement et profitez du catalogue complet, du paiement Stripe et
-            de la disponibilité en boutique partout en Tunisie.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/auth/signup"
-              className="inline-flex items-center justify-center px-8 py-3 bg-white text-secondary rounded-xl font-bold hover:bg-white/90 transition shadow-lg min-h-12"
-            >
-              Créer mon compte
-            </Link>
-            <Link
-              href="/#catalogue"
-              className="inline-flex items-center justify-center px-8 py-3 border-2 border-white/40 text-primary-foreground rounded-xl font-semibold hover:bg-white/10 transition min-h-12"
-            >
-              Voir le catalogue
-            </Link>
-          </div>
-        </div>
-      </div>
-
       <div className="shop-footer-main border-t border-border/60">
         <div className="page-container py-10 sm:py-14">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">

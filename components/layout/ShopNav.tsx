@@ -6,7 +6,6 @@ import { LogIn, LogOut, QrCode, ShoppingCart } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/layout/AppHeader';
-import { ShopPromoBar } from '@/components/layout/ShopPromoBar';
 import { cn } from '@/lib/utils';
 
 interface ShopNavProps {
@@ -40,7 +39,6 @@ export function ShopNav({ cartCount = 0 }: ShopNavProps) {
       logoHref="/"
       sectionLabel="Boutique"
       tone="shop"
-      promoBar={<ShopPromoBar />}
       center={
         <nav className="flex items-center gap-1">
           {NAV_LINKS.map((link) => {
