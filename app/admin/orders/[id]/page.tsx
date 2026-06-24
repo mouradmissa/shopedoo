@@ -6,6 +6,13 @@ import { useParams } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
+import { ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS } from '@/lib/orderLabels';
+
+interface StoreInfo {
+  name: string;
+  city?: string;
+  governorate?: string;
+}
 
 interface OrderItem {
   productId: { name: string; price: number };
@@ -16,6 +23,8 @@ interface OrderItem {
 interface OrderDetail {
   _id: string;
   userId: { name: string; email: string };
+  storeId?: StoreInfo | null;
+  confirmedByUserId?: { name: string } | null;
   items: OrderItem[];
   subtotal?: number;
   taxAmount?: number;
@@ -24,22 +33,12 @@ interface OrderDetail {
   paymentMethod: string;
   shippingAddress: string;
   invoiceQrCode?: string;
+  paidAt?: string;
   createdAt: string;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: 'En attente',
-  paid: 'Payée',
-  shipped: 'Expédiée',
-  delivered: 'Livrée',
-  cancelled: 'Annulée',
-};
-
-const PAYMENT_LABELS: Record<string, string> = {
-  cash_register: 'À la caisse',
-  cash_delivery: 'Espèces à la livraison',
-  online: 'En ligne',
-};
+const STATUS_LABELS = ORDER_STATUS_LABELS;
+const PAYMENT_LABELS = PAYMENT_METHOD_LABELS;
 
 export default function AdminOrderDetailPage() {
   const params = useParams();
@@ -102,11 +101,20 @@ export default function AdminOrderDetailPage() {
         </div>
 
         <div className="p-5 sm:p-6 space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+            <div className="rounded-xl bg-muted/40 p-4">
+              <p className="text-xs text-muted-foreground mb-1">Boutique</p>
+              <p className="font-semibold">{order.storeId?.name || 'Non assignée'}</p>
+              {order.storeId?.governorate && (
+                <p className="text-muted-foreground text-xs mt-1">
+                  {order.storeId.city} — {order.storeId.governorate}
+                </p>
+              )}
+            </div>
             <div className="rounded-xl bg-muted/40 p-4">
               <p className="text-xs text-muted-foreground mb-1">Client</p>
               <p className="font-semibold">{order.userId?.name}</p>
-              <p className="text-muted-foreground break-all">{order.userId?.email}</p>
+              <p className="text-muted-foreground break-all text-xs">{order.userId?.email}</p>
             </div>
             <div className="rounded-xl bg-muted/40 p-4">
               <p className="text-xs text-muted-foreground mb-1">Statut</p>
@@ -114,6 +122,11 @@ export default function AdminOrderDetailPage() {
               <p className="text-muted-foreground mt-2">
                 Paiement : {PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod}
               </p>
+              {order.confirmedByUserId?.name && (
+                <p className="text-muted-foreground mt-1 text-xs">
+                  Caissier : {order.confirmedByUserId.name}
+                </p>
+              )}
             </div>
           </div>
 

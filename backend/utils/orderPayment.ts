@@ -1,6 +1,7 @@
 import Order from '../models/Order';
 import Product from '../models/Product';
 import { clearCartForUser } from './cart';
+import { resolveStoreIdFromProductIds } from './orderStore';
 
 export async function fulfillOnlineOrderPayment(orderId: string, stripePaymentId: string) {
   const order = await Order.findById(orderId);
@@ -30,6 +31,15 @@ export async function fulfillOnlineOrderPayment(orderId: string, stripePaymentId
 
   order.status = 'paid';
   order.stripePaymentId = stripePaymentId;
+  order.paidAt = new Date();
+
+  if (!order.storeId) {
+    const storeId = await resolveStoreIdFromProductIds(
+      order.items.map((item) => item.productId as unknown as string)
+    );
+    if (storeId) order.storeId = storeId;
+  }
+
   await order.save();
 
   await clearCartForUser(String(order.userId));

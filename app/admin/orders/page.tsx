@@ -5,10 +5,18 @@ import Link from 'next/link';
 import { Loader2, Eye } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
+import { ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, PAYMENT_METHOD_LABELS } from '@/lib/orderLabels';
+
+interface StoreInfo {
+  name: string;
+  city?: string;
+  governorate?: string;
+}
 
 interface Order {
   _id: string;
   userId: { name: string; email: string };
+  storeId?: StoreInfo | null;
   totalAmount: number;
   status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
   paymentMethod?: string;
@@ -16,22 +24,8 @@ interface Order {
   items: unknown[];
 }
 
-const STATUS_LABELS: Record<string, string> = {
-  all: 'Toutes',
-  pending: 'En attente',
-  paid: 'Payée',
-  shipped: 'Expédiée',
-  delivered: 'Livrée',
-  cancelled: 'Annulée',
-};
-
-const statusColors: Record<string, string> = {
-  pending: 'bg-amber-500/10 text-amber-700',
-  paid: 'bg-blue-500/10 text-blue-700',
-  shipped: 'bg-purple-500/10 text-purple-700',
-  delivered: 'bg-green-500/10 text-green-700',
-  cancelled: 'bg-red-500/10 text-red-600',
-};
+const STATUS_LABELS = ORDER_STATUS_LABELS;
+const statusColors = ORDER_STATUS_COLORS;
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -93,7 +87,9 @@ export default function AdminOrdersPage() {
               <thead>
                 <tr className="border-b border-border bg-muted/40">
                   <th className="text-left py-3 px-4 text-sm font-semibold">Réf.</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Boutique</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold">Client</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold">Paiement</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold">Articles</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold">Montant</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold">Statut</th>
@@ -105,9 +101,17 @@ export default function AdminOrdersPage() {
                 {orders.map((order) => (
                   <tr key={order._id} className="border-b border-border last:border-0 hover:bg-muted/30">
                     <td className="py-3 px-4 font-mono text-xs">#{order._id.slice(-8).toUpperCase()}</td>
+                    <td className="py-3 px-4 text-sm font-medium">
+                      {order.storeId?.name || '—'}
+                    </td>
                     <td className="py-3 px-4">
                       <p className="font-medium text-sm">{order.userId?.name}</p>
                       <p className="text-xs text-muted-foreground">{order.userId?.email}</p>
+                    </td>
+                    <td className="py-3 px-4 text-sm">
+                      {order.paymentMethod
+                        ? PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod
+                        : '—'}
                     </td>
                     <td className="py-3 px-4 text-sm">{order.items?.length || 0}</td>
                     <td className="py-3 px-4 font-semibold text-primary text-sm">
@@ -154,12 +158,16 @@ export default function AdminOrdersPage() {
                     <p className="font-mono text-xs text-muted-foreground">
                       #{order._id.slice(-8).toUpperCase()}
                     </p>
+                    <p className="font-semibold">{order.storeId?.name || 'Boutique non assignée'}</p>
                     <p className="font-semibold">{order.userId?.name}</p>
                     <p className="text-xs text-muted-foreground">{order.userId?.email}</p>
                   </div>
                   <p className="font-bold text-primary">{formatPrice(order.totalAmount)}</p>
                 </div>
                 <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>
+                    {PAYMENT_METHOD_LABELS[order.paymentMethod || ''] ?? order.paymentMethod ?? '—'}
+                  </span>
                   <span>{order.items?.length || 0} article(s)</span>
                   <span>{new Date(order.createdAt).toLocaleDateString('fr-TN')}</span>
                 </div>

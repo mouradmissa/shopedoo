@@ -218,6 +218,12 @@ class ApiClient {
     return this.request(url, 'GET');
   }
 
+  async getManagerOrders(status?: string) {
+    let url = '/orders/manager/mine';
+    if (status) url += `?status=${status}`;
+    return this.request(url, 'GET');
+  }
+
   async updateOrderStatus(id: string, status: string) {
     return this.request(`/orders/${id}/status`, 'PUT', { status });
   }

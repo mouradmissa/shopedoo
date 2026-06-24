@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Package, Store, Users } from 'lucide-react';
+import { Package, Receipt, Store, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/layout/AppHeader';
 
 const NAV = [
   { href: '/manager', label: 'Tableau de bord', icon: Store, exact: true },
+  { href: '/manager/orders', label: 'Paiements', icon: Receipt },
   { href: '/manager/products', label: 'Produits', icon: Package },
   { href: '/manager/cashiers', label: 'Caissiers', icon: Users },
 ];

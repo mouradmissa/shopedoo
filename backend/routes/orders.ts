@@ -1,13 +1,22 @@
 import express, { Router, Response } from 'express';
 import { randomUUID } from 'crypto';
+import { Types } from 'mongoose';
 import Order from '../models/Order';
 import Cart from '../models/Cart';
 import Product from '../models/Product';
 import { authMiddleware, adminMiddleware, cashierOrAdminMiddleware, AuthRequest } from '../middleware/auth';
+import { getManagerStoreId, resolveStoreIdFromProductIds } from '../utils/orderStore';
 
 const router: Router = express.Router();
 const STORE_PICKUP = 'Retrait en magasin - Caisse shopedoo';
 const TAX_RATE = 0.1;
+
+const orderListPopulate = [
+  { path: 'userId', select: 'name email' },
+  { path: 'storeId', select: 'name city governorate' },
+  { path: 'confirmedByUserId', select: 'name' },
+  { path: 'items.productId', select: 'name price storeId' },
+];
 
 // Caissier : confirmer paiement facture QR (avant /:id)
 router.post('/cashier/invoice/confirm', authMiddleware, cashierOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
@@ -57,7 +66,23 @@ router.post('/cashier/invoice/confirm', authMiddleware, cashierOrAdminMiddleware
     }
 
     order.status = 'paid';
+    order.paidAt = new Date();
+
+    if (req.user?.storeId) {
+      order.storeId = new Types.ObjectId(req.user.storeId);
+    } else if (!order.storeId) {
+      const fromProducts = await resolveStoreIdFromProductIds(
+        order.items.map((item) => item.productId as unknown as string)
+      );
+      if (fromProducts) order.storeId = fromProducts;
+    }
+
+    if (req.user?.userId) {
+      order.confirmedByUserId = new Types.ObjectId(req.user.userId);
+    }
+
     await order.save();
+    await order.populate(orderListPopulate);
 
     res.json({
       success: true,
@@ -66,6 +91,37 @@ router.post('/cashier/invoice/confirm', authMiddleware, cashierOrAdminMiddleware
     });
   } catch (error) {
     res.status(500).json({ error: 'Échec de la confirmation', details: String(error) });
+  }
+});
+
+// Gérant : paiements et commandes de sa boutique
+router.get('/manager/mine', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    if (req.user?.role !== 'manager') {
+      res.status(403).json({ error: 'Accès réservé au gérant' });
+      return;
+    }
+
+    const storeId = await getManagerStoreId(req.user.userId);
+    if (!storeId) {
+      res.status(404).json({ error: 'Aucune boutique assignée' });
+      return;
+    }
+
+    const { status } = req.query;
+    const filter: Record<string, unknown> = { storeId };
+
+    if (status && typeof status === 'string') {
+      filter.status = status;
+    }
+
+    const orders = await Order.find(filter)
+      .populate(orderListPopulate)
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: 'Impossible de charger les paiements boutique', details: String(error) });
   }
 });
 
@@ -85,15 +141,24 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response): Promise
 // Get single order
 router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const order = await Order.findById(req.params.id).populate('items.productId');
+    const order = await Order.findById(req.params.id).populate(orderListPopulate);
 
     if (!order) {
       res.status(404).json({ error: 'Order not found' });
       return;
     }
 
-    // Check if user owns this order or is admin
-    if (order.userId.toString() !== req.user?.userId && !['admin', 'cashier'].includes(req.user?.role ?? '')) {
+    const isOwner = order.userId.toString() === req.user?.userId;
+    const isStaff = ['admin', 'cashier'].includes(req.user?.role ?? '');
+
+    if (req.user?.role === 'manager') {
+      const managerStoreId = await getManagerStoreId(req.user.userId);
+      const orderStoreId = order.storeId ? String(order.storeId) : null;
+      if (!managerStoreId || orderStoreId !== String(managerStoreId)) {
+        res.status(403).json({ error: 'Unauthorized' });
+        return;
+      }
+    } else if (!isOwner && !isStaff) {
       res.status(403).json({ error: 'Unauthorized' });
       return;
     }
@@ -162,6 +227,9 @@ router.post('/checkout', authMiddleware, async (req: AuthRequest, res: Response)
     const taxAmount = Math.round(subtotal * TAX_RATE * 100) / 100;
     const totalAmount = Math.round((subtotal + taxAmount) * 100) / 100;
 
+    const productIds = items.map((item) => item.productId);
+    const storeId = await resolveStoreIdFromProductIds(productIds);
+
     const order = new Order({
       userId: req.user?.userId,
       items,
@@ -170,6 +238,7 @@ router.post('/checkout', authMiddleware, async (req: AuthRequest, res: Response)
       totalAmount,
       status: 'pending',
       paymentMethod,
+      storeId: storeId ?? undefined,
       shippingAddress: isCashRegister ? STORE_PICKUP : shippingAddress.trim(),
       ...(isCashRegister ? { invoiceQrCode: `SHOPEDOO-INV-${randomUUID()}` } : {}),
     });
@@ -197,8 +266,7 @@ router.get('/admin/all', authMiddleware, adminMiddleware, async (req: AuthReques
     if (status) filter.status = status;
 
     const orders = await Order.find(filter)
-      .populate('userId', 'name email')
-      .populate('items.productId')
+      .populate(orderListPopulate)
       .sort({ createdAt: -1 });
 
     res.json(orders);

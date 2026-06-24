@@ -12,9 +12,12 @@ export interface IOrder extends Document {
   totalAmount: number;
   status: 'pending' | 'paid' | 'shipped' | 'delivered' | 'cancelled';
   paymentMethod: string;
+  storeId?: mongoose.Types.ObjectId;
   stripePaymentId?: string;
   shippingAddress: string;
   invoiceQrCode?: string;
+  paidAt?: Date;
+  confirmedByUserId?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -38,14 +41,19 @@ const orderSchema = new Schema<IOrder>(
       default: 'pending',
     },
     paymentMethod: { type: String, required: true },
+    storeId: { type: Schema.Types.ObjectId, ref: 'Store' },
     stripePaymentId: String,
     shippingAddress: { type: String, required: true },
     invoiceQrCode: { type: String, unique: true, sparse: true },
+    paidAt: Date,
+    confirmedByUserId: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }
 );
 
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
+orderSchema.index({ storeId: 1, createdAt: -1 });
+orderSchema.index({ storeId: 1, status: 1 });
 
 export default mongoose.model<IOrder>('Order', orderSchema);
