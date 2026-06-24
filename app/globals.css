@@ -39,6 +39,8 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+  --color-offer-foreground: var(--offer-foreground);
+  --color-offer: var(--offer);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -58,8 +60,10 @@
   --popover-foreground: #0f0f0f;
   --primary: #ff3131;
   --primary-foreground: #ffffff;
-  --secondary: #004e89;
+  --secondary: #0f0f0f;
   --secondary-foreground: #ffffff;
+  --offer: #f5c400;
+  --offer-foreground: #0f0f0f;
   --muted: #e8e8e8;
   --muted-foreground: #666666;
   --accent: #ff3131;
@@ -69,16 +73,16 @@
   --input: #f5f5f5;
   --ring: #ff3131;
   --chart-1: #ff3131;
-  --chart-2: #004e89;
-  --chart-3: #1f77b4;
+  --chart-2: #0f0f0f;
+  --chart-3: #f5c400;
   --chart-4: #ff8a8a;
-  --chart-5: #ffcc99;
+  --chart-5: #ffffff;
   --radius: 0.625rem;
   --sidebar: #f9f9f9;
   --sidebar-foreground: #0f0f0f;
   --sidebar-primary: #ff3131;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #004e89;
+  --sidebar-accent: #0f0f0f;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #e8e8e8;
   --sidebar-ring: #ff3131;
@@ -94,8 +98,10 @@
   --popover-foreground: #ffffff;
   --primary: #ff3131;
   --primary-foreground: #0f0f0f;
-  --secondary: #004e89;
+  --secondary: #0f0f0f;
   --secondary-foreground: #ffffff;
+  --offer: #f5c400;
+  --offer-foreground: #0f0f0f;
   --muted: #2a2a2a;
   --muted-foreground: #999999;
   --accent: #ff3131;
@@ -105,15 +111,15 @@
   --input: #1a1a1a;
   --ring: #ff3131;
   --chart-1: #ff3131;
-  --chart-2: #004e89;
-  --chart-3: #1f77b4;
+  --chart-2: #0f0f0f;
+  --chart-3: #f5c400;
   --chart-4: #ff8a8a;
-  --chart-5: #ffcc99;
+  --chart-5: #ffffff;
   --sidebar: #1a1a1a;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #ff3131;
   --sidebar-primary-foreground: #0f0f0f;
-  --sidebar-accent: #004e89;
+  --sidebar-accent: #0f0f0f;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #2a2a2a;
   --sidebar-ring: #ff3131;
@@ -130,8 +136,10 @@
     --popover-foreground: #ffffff;
     --primary: #ff3131;
     --primary-foreground: #0f0f0f;
-    --secondary: #004e89;
+    --secondary: #0f0f0f;
     --secondary-foreground: #ffffff;
+    --offer: #f5c400;
+    --offer-foreground: #0f0f0f;
     --muted: #2a2a2a;
     --muted-foreground: #999999;
     --accent: #ff3131;
@@ -141,15 +149,15 @@
     --input: #1a1a1a;
     --ring: #ff3131;
     --chart-1: #ff3131;
-    --chart-2: #004e89;
-    --chart-3: #1f77b4;
+    --chart-2: #0f0f0f;
+    --chart-3: #f5c400;
     --chart-4: #ff8a8a;
-    --chart-5: #ffcc99;
+    --chart-5: #ffffff;
     --sidebar: #1a1a1a;
     --sidebar-foreground: #ffffff;
     --sidebar-primary: #ff3131;
     --sidebar-primary-foreground: #0f0f0f;
-    --sidebar-accent: #004e89;
+    --sidebar-accent: #0f0f0f;
     --sidebar-accent-foreground: #ffffff;
     --sidebar-border: #2a2a2a;
     --sidebar-ring: #ff3131;
@@ -211,7 +219,8 @@
   }
 
   .shop-promo-bar {
-    background: linear-gradient(90deg, var(--secondary) 0%, #003366 50%, var(--secondary) 100%);
+    background: linear-gradient(90deg, var(--offer) 0%, #e6b800 50%, var(--offer) 100%);
+    color: var(--offer-foreground);
   }
 
   .shop-hero {
@@ -221,7 +230,7 @@
       135deg,
       color-mix(in srgb, var(--primary) 8%, var(--background)) 0%,
       var(--background) 45%,
-      color-mix(in srgb, var(--secondary) 6%, var(--background)) 100%
+      color-mix(in srgb, var(--foreground) 4%, var(--background)) 100%
     );
   }
 
@@ -245,7 +254,7 @@
     width: min(400px, 60vw);
     height: min(400px, 60vw);
     border-radius: 50%;
-    background: radial-gradient(circle, color-mix(in srgb, var(--secondary) 15%, transparent) 0%, transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--foreground) 8%, transparent) 0%, transparent 70%);
     pointer-events: none;
   }
 
@@ -274,7 +283,24 @@
   }
 
   .shop-footer-promo {
-    background: linear-gradient(135deg, var(--secondary) 0%, #003d6b 50%, var(--primary) 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, #0f0f0f 50%, var(--primary) 100%);
+  }
+
+  .shop-offer-banner {
+    @apply rounded-2xl border border-offer/40 p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--offer) 18%, var(--background)) 0%,
+      var(--background) 50%,
+      color-mix(in srgb, var(--offer) 12%, var(--background)) 100%
+    );
+  }
+
+  .shop-offer-badge {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide;
+    background: color-mix(in srgb, var(--offer) 25%, var(--background));
+    color: var(--offer-foreground);
+    border: 1px solid color-mix(in srgb, var(--offer) 50%, transparent);
   }
 
   .shop-footer-main {

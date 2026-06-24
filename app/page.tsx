@@ -184,12 +184,13 @@ export default function Home() {
         </section>
 
         <section className="page-container mb-6 sm:mb-8">
-          <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-background to-secondary/5 p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="shop-offer-banner">
             <div className="flex items-center gap-3 text-center sm:text-left">
-              <div className="hidden sm:flex w-12 h-12 rounded-full bg-primary/15 items-center justify-center shrink-0">
-                <Zap className="w-6 h-6 text-primary" />
+              <div className="hidden sm:flex w-12 h-12 rounded-full bg-offer/30 items-center justify-center shrink-0">
+                <Zap className="w-6 h-6 text-offer-foreground" />
               </div>
               <div>
+                <p className="shop-offer-badge mb-2 w-fit mx-auto sm:mx-0">Offre</p>
                 <p className="font-bold text-base sm:text-lg">Offre limitée — Ne ratez pas le stock</p>
                 <p className="text-sm text-muted-foreground">
                   Les meilleures offres partent vite. Ajoutez au panier avant rupture.

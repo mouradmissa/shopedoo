@@ -18,6 +18,6 @@ export const ORDER_STATUS_COLORS: Record<string, string> = {
   pending: 'bg-amber-500/10 text-amber-700',
   paid: 'bg-green-500/10 text-green-700',
   shipped: 'bg-purple-500/10 text-purple-700',
-  delivered: 'bg-blue-500/10 text-blue-700',
+  delivered: 'bg-foreground/10 text-foreground',
   cancelled: 'bg-red-500/10 text-red-600',
 };
