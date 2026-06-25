@@ -1,6 +1,7 @@
 'use client';
 
 import { Download } from 'lucide-react';
+import { API_BASE } from '@/lib/api';
 
 interface ProductQrDisplayProps {
   qrCode?: string;
@@ -19,12 +20,14 @@ export function ProductQrDisplay({
   productId,
   compact = false,
 }: ProductQrDisplayProps) {
-  if (!qrCode && !qrCodeImage) return null;
+  const imageSrc =
+    qrCodeImage || (productId ? `${API_BASE}/api/products/${productId}/qr-image` : undefined);
 
-  const downloadHref =
-    productId && qrCode
-      ? `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:5000'}/api/products/${productId}/qr-image`
-      : qrCodeImage;
+  if (!qrCode && !imageSrc) return null;
+
+  const downloadHref = productId
+    ? `${API_BASE}/api/products/${productId}/qr-image`
+    : qrCodeImage;
 
   const handleDownload = () => {
     if (qrCodeImage) {
@@ -48,10 +51,10 @@ export function ProductQrDisplay({
     >
       <p className={`font-semibold ${compact ? 'text-sm mb-2' : 'mb-3'}`}>Code QR produit</p>
 
-      {qrCodeImage ? (
+      {imageSrc ? (
         <div className="flex flex-col items-center gap-3">
           <img
-            src={qrCodeImage}
+            src={imageSrc}
             alt={`QR code ${productName || 'produit'}`}
             className={`rounded-lg border border-border bg-white p-2 ${
               compact ? 'w-28 h-28' : 'w-40 h-40 sm:w-48 sm:h-48'

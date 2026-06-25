@@ -128,15 +128,17 @@ export default function ManagerProductsPage() {
     );
 
     if (response.success && response.data) {
-      const existing = products.find((p) => p._id === (response.data as Product)._id);
+      const created = response.data as Product;
+      const existing = products.find((p) => p._id === created._id);
       if (existing) {
-        setProducts(products.map((p) => (p._id === existing._id ? response.data : p)));
+        setProducts(products.map((p) => (p._id === existing._id ? created : p)));
       } else {
-        setProducts([response.data, ...products]);
+        setProducts([created, ...products]);
       }
       setLinkForm(emptyLinkForm());
       setLinkImageFile(null);
       setShowForm(false);
+      setQrProduct(created);
     } else {
       alert(response.error || 'Erreur ajout stock');
     }
@@ -157,7 +159,8 @@ export default function ManagerProductsPage() {
     );
 
     if (response.success && response.data) {
-      setProducts([response.data, ...products]);
+      const created = response.data as Product;
+      setProducts([created, ...products]);
       setFormData({
         name: '',
         description: '',
@@ -167,6 +170,7 @@ export default function ManagerProductsPage() {
       });
       setImageFile(null);
       setShowForm(false);
+      setQrProduct(created);
       const catalogRes = await apiClient.getCatalogProducts();
       if (catalogRes.success) setCatalogOptions(catalogRes.data || []);
     } else {

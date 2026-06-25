@@ -9,7 +9,7 @@ import {
   AuthRequest,
 } from '../middleware/auth';
 import { productImageUpload } from '../middleware/upload';
-import { generateProductQrImage, ensureProductQrImage, getProductPageUrl } from '../utils/productQr';
+import { ensureProductQr } from '../utils/productQr';
 import { buildProductCatalog, getProductWithAvailability } from '../utils/productCatalog';
 import { resolveUserStoreId } from '../utils/storeAccess';
 import {
@@ -19,7 +19,6 @@ import {
 } from '../utils/productImage';
 import type { ICatalogProduct } from '../models/CatalogProduct';
 import { buildCatalogProductImageUrl } from '../utils/catalogImage';
-import { v4 as uuidv4 } from 'uuid';
 
 const router: Router = express.Router();
 
@@ -76,28 +75,16 @@ async function createProductWithQr(
   const product = new Product(data);
   await product.save();
 
-  const code = `SHOPEDOO-${uuidv4()}`;
-  const payload = getProductPageUrl(String(product._id));
-  const qrCodeImage = await generateProductQrImage(payload);
-
-  const qrCode = new QRCode({
-    productId: product._id,
-    code,
-  });
-  await qrCode.save();
-
-  product.qrCode = code;
-  product.qrCodePayload = payload;
-  product.qrCodeImage = qrCodeImage;
-  await product.save();
-
   if (file) {
     await attachUploadedImage(product, file);
   } else if (catalogForImage) {
     await copyCatalogImageToProduct(product, catalogForImage);
   }
 
-  res.status(201).json(sanitizeProductForClient(product));
+  await ensureProductQr(product);
+
+  const fresh = await Product.findById(product._id);
+  res.status(201).json(sanitizeProductForClient(fresh ?? product));
 }
 
 router.get('/catalog/list', async (req: express.Request, res: Response): Promise<void> => {
@@ -214,7 +201,7 @@ router.get('/:id/qr-image', async (req: express.Request, res: Response): Promise
       return;
     }
 
-    await ensureProductQrImage(product);
+    await ensureProductQr(product);
     if (!product.qrCodeImage) {
       res.status(404).json({ error: 'QR image not available' });
       return;
@@ -240,7 +227,7 @@ router.get('/:id', async (req: express.Request, res: Response): Promise<void> =>
     }
 
     if (!result.isCatalogEntry) {
-      await ensureProductQrImage(result.product as InstanceType<typeof Product>);
+      await ensureProductQr(result.product as InstanceType<typeof Product>);
     }
 
     const productJson = sanitizeProductForClient(
@@ -306,6 +293,7 @@ router.post(
           } else if (!hasStoredImage(existing) && !existing.image) {
             await copyCatalogImageToProduct(existing, catalog);
           }
+          await ensureProductQr(existing);
           res.status(200).json(sanitizeProductForClient(existing));
           return;
         }
@@ -364,8 +352,9 @@ router.post(
           storeId: targetStoreId,
           catalogProductId: String(catalog._id),
         },
-        undefined,
-        res
+        req.file,
+        res,
+        req.file ? undefined : catalog
       );
     } catch (error) {
       res.status(500).json({ error: 'Failed to create product', details: String(error) });
@@ -407,6 +396,8 @@ router.put(
       if (req.file) {
         await attachUploadedImage(product, req.file);
       }
+
+      await ensureProductQr(product);
 
       res.json(sanitizeProductForClient(product));
     } catch {
