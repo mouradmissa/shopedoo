@@ -54,18 +54,13 @@ export default function OnlineManagerOrdersPage() {
     }
   };
 
-  const updateStatus = async (orderId: string, status: string) => {
-    const response = await apiClient.updateOrderStatus(orderId, status);
-    if (response.success && response.data) {
-      setOrders(orders.map((o) => (o._id === orderId ? response.data : o)));
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Commandes en ligne</h1>
-        <p className="text-sm text-muted-foreground mt-1">Livraison et paiement en ligne uniquement.</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Assignez les commandes aux livreurs. La confirmation de livraison est faite par le livreur.
+        </p>
       </div>
 
       <div className="mobile-scroll-x mb-6">
@@ -136,15 +131,6 @@ export default function OnlineManagerOrdersPage() {
                         </option>
                       ))}
                     </select>
-                  )}
-                  {order.status === 'shipped' && (
-                    <button
-                      type="button"
-                      onClick={() => updateStatus(order._id, 'delivered')}
-                      className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold"
-                    >
-                      Marquer livrée
-                    </button>
                   )}
                 </div>
               </div>

@@ -139,6 +139,72 @@ router.get('/', authMiddleware, async (req: AuthRequest, res: Response): Promise
   }
 });
 
+router.get('/admin/all', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { status } = req.query;
+
+    const filter: Record<string, unknown> = {};
+    if (status) filter.status = status;
+
+    const orders = await Order.find(filter)
+      .populate(orderListPopulate)
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch orders' });
+  }
+});
+
+router.get('/online/list', authMiddleware, onlineManagerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { status } = req.query;
+    const filter: Record<string, unknown> = {
+      paymentMethod: { $in: ONLINE_PAYMENT_METHODS },
+      shippingAddress: { $ne: STORE_PICKUP },
+    };
+    if (status) filter.status = status;
+
+    const orders = await Order.find(filter)
+      .populate(orderListPopulate)
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch {
+    res.status(500).json({ error: 'Impossible de charger les commandes en ligne' });
+  }
+});
+
+router.get('/driver/mine', authMiddleware, driverMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const orders = await Order.find({
+      assignedDriverId: req.user?.userId,
+      status: 'shipped',
+    })
+      .populate(orderListPopulate)
+      .sort({ assignedAt: -1, createdAt: -1 });
+
+    res.json(orders);
+  } catch {
+    res.status(500).json({ error: 'Impossible de charger vos livraisons' });
+  }
+});
+
+router.get('/driver/archive', authMiddleware, driverMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const orders = await Order.find({
+      assignedDriverId: req.user?.userId,
+      status: 'delivered',
+    })
+      .populate(orderListPopulate)
+      .sort({ deliveredAt: -1, updatedAt: -1 });
+
+    res.json(orders);
+  } catch {
+    res.status(500).json({ error: 'Impossible de charger l\'archive des livraisons' });
+  }
+});
+
 router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const order = await Order.findById(req.params.id).populate(orderListPopulate);
@@ -255,57 +321,6 @@ router.post('/checkout', authMiddleware, async (req: AuthRequest, res: Response)
   }
 });
 
-router.get('/admin/all', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { status } = req.query;
-
-    const filter: any = {};
-    if (status) filter.status = status;
-
-    const orders = await Order.find(filter)
-      .populate(orderListPopulate)
-      .sort({ createdAt: -1 });
-
-    res.json(orders);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch orders' });
-  }
-});
-
-router.get('/online/list', authMiddleware, onlineManagerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const { status } = req.query;
-    const filter: Record<string, unknown> = {
-      paymentMethod: { $in: ONLINE_PAYMENT_METHODS },
-      shippingAddress: { $ne: STORE_PICKUP },
-    };
-    if (status) filter.status = status;
-
-    const orders = await Order.find(filter)
-      .populate(orderListPopulate)
-      .sort({ createdAt: -1 });
-
-    res.json(orders);
-  } catch {
-    res.status(500).json({ error: 'Impossible de charger les commandes en ligne' });
-  }
-});
-
-router.get('/driver/mine', authMiddleware, driverMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const orders = await Order.find({
-      assignedDriverId: req.user?.userId,
-      status: { $in: ['paid', 'shipped'] },
-    })
-      .populate(orderListPopulate)
-      .sort({ assignedAt: -1, createdAt: -1 });
-
-    res.json(orders);
-  } catch {
-    res.status(500).json({ error: 'Impossible de charger vos livraisons' });
-  }
-});
-
 router.put('/:id/assign', authMiddleware, onlineManagerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { driverId } = req.body as { driverId?: string };
@@ -363,7 +378,13 @@ router.put('/:id/driver/delivered', authMiddleware, driverMiddleware, async (req
       return;
     }
 
+    if (!['shipped'].includes(order.status)) {
+      res.status(400).json({ error: 'Seules les livraisons en cours peuvent être confirmées' });
+      return;
+    }
+
     order.status = 'delivered';
+    order.deliveredAt = new Date();
     await order.save();
     await order.populate(orderListPopulate);
 
@@ -397,6 +418,10 @@ router.put('/:id/status', authMiddleware, async (req: AuthRequest, res: Response
     if (role === 'online_manager') {
       if (!ONLINE_PAYMENT_METHODS.includes(order.paymentMethod)) {
         res.status(403).json({ error: 'Commande hors périmètre en ligne' });
+        return;
+      }
+      if (status === 'delivered') {
+        res.status(403).json({ error: 'Seul le livreur peut confirmer la livraison' });
         return;
       }
     }

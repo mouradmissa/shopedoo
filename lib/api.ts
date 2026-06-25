@@ -467,6 +467,10 @@ class ApiClient {
     return this.request('/orders/driver/mine', 'GET');
   }
 
+  async getDriverArchive() {
+    return this.request('/orders/driver/archive', 'GET');
+  }
+
   async assignOrderDriver(orderId: string, driverId: string) {
     return this.request(`/orders/${orderId}/assign`, 'PUT', { driverId });
   }
