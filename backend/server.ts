@@ -8,6 +8,8 @@ import productRoutes from './routes/products';
 import cartRoutes from './routes/cart';
 import orderRoutes from './routes/orders';
 import storeRoutes from './routes/stores';
+import catalogProductRoutes from './routes/catalogProducts';
+import userRoutes from './routes/users';
 import paymentRoutes, { handleStripeWebhook } from './routes/payment';
 
 dotenv.config({ path: 'backend/.env' });
@@ -39,6 +41,8 @@ app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/stores', storeRoutes);
+app.use('/api/catalog-products', catalogProductRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/payment', paymentRoutes);
 
 app.get('/health', (req, res) => {

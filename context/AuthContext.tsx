@@ -8,7 +8,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'admin' | 'manager' | 'cashier' | 'customer';
+  role: 'admin' | 'manager' | 'cashier' | 'customer' | 'online_manager' | 'driver';
   storeId?: string;
   store?: {
     _id?: string;

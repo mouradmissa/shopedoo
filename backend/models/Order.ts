@@ -18,6 +18,8 @@ export interface IOrder extends Document {
   invoiceQrCode?: string;
   paidAt?: Date;
   confirmedByUserId?: mongoose.Types.ObjectId;
+  assignedDriverId?: mongoose.Types.ObjectId;
+  assignedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,6 +49,8 @@ const orderSchema = new Schema<IOrder>(
     invoiceQrCode: { type: String, unique: true, sparse: true },
     paidAt: Date,
     confirmedByUserId: { type: Schema.Types.ObjectId, ref: 'User' },
+    assignedDriverId: { type: Schema.Types.ObjectId, ref: 'User' },
+    assignedAt: Date,
   },
   { timestamps: true }
 );
@@ -55,5 +59,6 @@ orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ status: 1 });
 orderSchema.index({ storeId: 1, createdAt: -1 });
 orderSchema.index({ storeId: 1, status: 1 });
+orderSchema.index({ assignedDriverId: 1, status: 1 });
 
 export default mongoose.model<IOrder>('Order', orderSchema);

@@ -11,6 +11,7 @@ export interface IProduct extends Document {
   imageMimeType?: string;
   imageStored?: boolean;
   storeId?: Types.ObjectId;
+  catalogProductId?: Types.ObjectId;
   qrCode: string;
   qrCodeImage?: string;
   qrCodePayload?: string;
@@ -30,6 +31,7 @@ const productSchema = new Schema<IProduct>(
     imageMimeType: { type: String, default: 'image/jpeg' },
     imageStored: { type: Boolean, default: false },
     storeId: { type: Schema.Types.ObjectId, ref: 'Store' },
+    catalogProductId: { type: Schema.Types.ObjectId, ref: 'CatalogProduct' },
     qrCode: { type: String, unique: true, sparse: true },
     qrCodeImage: String,
     qrCodePayload: String,
@@ -39,6 +41,7 @@ const productSchema = new Schema<IProduct>(
 
 productSchema.index({ category: 1, name: 1 });
 productSchema.index({ storeId: 1, name: 1 });
+productSchema.index({ catalogProductId: 1, storeId: 1 });
 productSchema.index({ qrCode: 1 });
 
 export default mongoose.model<IProduct>('Product', productSchema);

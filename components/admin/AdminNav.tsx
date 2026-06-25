@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingBag, Store } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Store, Users } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { AppHeader } from '@/components/layout/AppHeader';
@@ -12,6 +12,7 @@ const NAV = [
   { href: '/admin/stores', label: 'Boutiques', icon: Store },
   { href: '/admin/products', label: 'Produits', icon: Package },
   { href: '/admin/orders', label: 'Commandes', icon: ShoppingBag },
+  { href: '/admin/users', label: 'Équipe en ligne', icon: Users },
 ];
 
 function NavLink({

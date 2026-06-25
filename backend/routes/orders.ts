@@ -4,7 +4,8 @@ import { Types } from 'mongoose';
 import Order from '../models/Order';
 import Cart from '../models/Cart';
 import Product from '../models/Product';
-import { authMiddleware, adminMiddleware, cashierOrAdminMiddleware, AuthRequest } from '../middleware/auth';
+import User from '../models/User';
+import { authMiddleware, adminMiddleware, cashierOrAdminMiddleware, onlineManagerOrAdminMiddleware, driverMiddleware, AuthRequest } from '../middleware/auth';
 import { getManagerStoreId, resolveStoreIdFromProductIds } from '../utils/orderStore';
 
 const router: Router = express.Router();
@@ -12,11 +13,14 @@ const STORE_PICKUP = 'Retrait en magasin - Caisse shopedoo';
 const TAX_RATE = 0.1;
 
 const orderListPopulate = [
-  { path: 'userId', select: 'name email' },
+  { path: 'userId', select: 'name email phone' },
   { path: 'storeId', select: 'name city governorate' },
   { path: 'confirmedByUserId', select: 'name' },
+  { path: 'assignedDriverId', select: 'name email phone' },
   { path: 'items.productId', select: 'name price storeId' },
 ];
+
+const ONLINE_PAYMENT_METHODS = ['cash_delivery', 'online'];
 
 router.post('/cashier/invoice/confirm', authMiddleware, cashierOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -268,8 +272,115 @@ router.get('/admin/all', authMiddleware, adminMiddleware, async (req: AuthReques
   }
 });
 
-router.put('/:id/status', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+router.get('/online/list', authMiddleware, onlineManagerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { status } = req.query;
+    const filter: Record<string, unknown> = {
+      paymentMethod: { $in: ONLINE_PAYMENT_METHODS },
+      shippingAddress: { $ne: STORE_PICKUP },
+    };
+    if (status) filter.status = status;
+
+    const orders = await Order.find(filter)
+      .populate(orderListPopulate)
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch {
+    res.status(500).json({ error: 'Impossible de charger les commandes en ligne' });
+  }
+});
+
+router.get('/driver/mine', authMiddleware, driverMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const orders = await Order.find({
+      assignedDriverId: req.user?.userId,
+      status: { $in: ['paid', 'shipped'] },
+    })
+      .populate(orderListPopulate)
+      .sort({ assignedAt: -1, createdAt: -1 });
+
+    res.json(orders);
+  } catch {
+    res.status(500).json({ error: 'Impossible de charger vos livraisons' });
+  }
+});
+
+router.put('/:id/assign', authMiddleware, onlineManagerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { driverId } = req.body as { driverId?: string };
+    if (!driverId) {
+      res.status(400).json({ error: 'Livreur requis' });
+      return;
+    }
+
+    const driver = await User.findOne({ _id: driverId, role: 'driver' });
+    if (!driver) {
+      res.status(404).json({ error: 'Livreur introuvable' });
+      return;
+    }
+
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      res.status(404).json({ error: 'Commande introuvable' });
+      return;
+    }
+
+    if (!ONLINE_PAYMENT_METHODS.includes(order.paymentMethod)) {
+      res.status(400).json({ error: 'Cette commande n\'est pas une commande en ligne' });
+      return;
+    }
+
+    if (!['paid', 'shipped'].includes(order.status)) {
+      res.status(400).json({ error: 'Commande non assignable dans cet état' });
+      return;
+    }
+
+    order.assignedDriverId = driver._id;
+    order.assignedAt = new Date();
+    if (order.status === 'paid') {
+      order.status = 'shipped';
+    }
+    await order.save();
+    await order.populate(orderListPopulate);
+
+    res.json(order);
+  } catch {
+    res.status(500).json({ error: 'Impossible d\'assigner la commande' });
+  }
+});
+
+router.put('/:id/driver/delivered', authMiddleware, driverMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const order = await Order.findById(req.params.id);
+    if (!order) {
+      res.status(404).json({ error: 'Commande introuvable' });
+      return;
+    }
+
+    if (String(order.assignedDriverId) !== req.user?.userId) {
+      res.status(403).json({ error: 'Cette livraison ne vous est pas assignée' });
+      return;
+    }
+
+    order.status = 'delivered';
+    await order.save();
+    await order.populate(orderListPopulate);
+
+    res.json(order);
+  } catch {
+    res.status(500).json({ error: 'Impossible de confirmer la livraison' });
+  }
+});
+
+router.put('/:id/status', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const role = req.user?.role;
+    if (role !== 'admin' && role !== 'online_manager') {
+      res.status(403).json({ error: 'Accès refusé' });
+      return;
+    }
+
     const { status } = req.body;
 
     if (!['pending', 'paid', 'shipped', 'delivered', 'cancelled'].includes(status)) {
@@ -277,19 +388,25 @@ router.put('/:id/status', authMiddleware, adminMiddleware, async (req: AuthReque
       return;
     }
 
-    const order = await Order.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    ).populate('items.productId');
-
+    const order = await Order.findById(req.params.id);
     if (!order) {
       res.status(404).json({ error: 'Order not found' });
       return;
     }
 
+    if (role === 'online_manager') {
+      if (!ONLINE_PAYMENT_METHODS.includes(order.paymentMethod)) {
+        res.status(403).json({ error: 'Commande hors périmètre en ligne' });
+        return;
+      }
+    }
+
+    order.status = status;
+    await order.save();
+    await order.populate('items.productId');
+
     res.json(order);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to update order' });
   }
 });

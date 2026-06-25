@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-export type AppRole = 'admin' | 'manager' | 'cashier' | 'customer';
+export type AppRole = 'admin' | 'manager' | 'cashier' | 'customer' | 'online_manager' | 'driver';
 
 export interface TokenPayload {
   userId: string;

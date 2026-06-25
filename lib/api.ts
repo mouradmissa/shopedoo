@@ -186,17 +186,19 @@ class ApiClient {
       category: string;
       stock: number;
       storeId?: string;
+      catalogProductId?: string;
     },
     imageFile?: File | null
   ) {
     if (imageFile) {
       const formData = new FormData();
-      formData.append('name', data.name);
-      formData.append('description', data.description);
-      formData.append('price', String(data.price));
-      formData.append('category', data.category);
+      if (data.name) formData.append('name', data.name);
+      if (data.description) formData.append('description', data.description);
+      if (data.price !== undefined) formData.append('price', String(data.price));
+      if (data.category) formData.append('category', data.category);
       formData.append('stock', String(data.stock));
       if (data.storeId) formData.append('storeId', data.storeId);
+      if (data.catalogProductId) formData.append('catalogProductId', data.catalogProductId);
       formData.append('image', imageFile);
       return this.requestForm('/products', 'POST', formData);
     }
@@ -368,6 +370,101 @@ class ApiClient {
     data: { name: string; email: string; password: string; phone?: string }
   ) {
     return this.request(`/stores/${storeId}/cashiers`, 'POST', data);
+  }
+
+  async getStaffUsers(role?: string) {
+    let url = '/users';
+    if (role) url += `?role=${role}`;
+    return this.request(url, 'GET');
+  }
+
+  async createStaffUser(data: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+    role: 'online_manager' | 'driver';
+  }) {
+    return this.request('/users', 'POST', data);
+  }
+
+  async getDrivers() {
+    return this.request('/users/drivers', 'GET');
+  }
+
+  async getCatalogProducts(category?: string, search?: string) {
+    let url = '/catalog-products';
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (search) params.append('search', search);
+    if (params.toString()) url += `?${params.toString()}`;
+    return this.request(url, 'GET');
+  }
+
+  async createCatalogProduct(
+    data: {
+      name: string;
+      description: string;
+      price: number;
+      category: string;
+    },
+    imageFile?: File | null
+  ) {
+    if (imageFile) {
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('description', data.description);
+      formData.append('price', String(data.price));
+      formData.append('category', data.category);
+      formData.append('image', imageFile);
+      return this.requestForm('/catalog-products', 'POST', formData);
+    }
+    return this.request('/catalog-products', 'POST', data);
+  }
+
+  async updateCatalogProduct(
+    id: string,
+    data: Partial<{
+      name: string;
+      description: string;
+      price: number;
+      category: string;
+      isActive: boolean;
+    }>,
+    imageFile?: File | null
+  ) {
+    if (imageFile) {
+      const formData = new FormData();
+      if (data.name) formData.append('name', data.name);
+      if (data.description) formData.append('description', data.description);
+      if (data.price !== undefined) formData.append('price', String(data.price));
+      if (data.category) formData.append('category', data.category);
+      formData.append('image', imageFile);
+      return this.requestForm(`/catalog-products/${id}`, 'PUT', formData);
+    }
+    return this.request(`/catalog-products/${id}`, 'PUT', data);
+  }
+
+  async deleteCatalogProduct(id: string) {
+    return this.request(`/catalog-products/${id}`, 'DELETE');
+  }
+
+  async getOnlineOrders(status?: string) {
+    let url = '/orders/online/list';
+    if (status) url += `?status=${status}`;
+    return this.request(url, 'GET');
+  }
+
+  async getDriverOrders() {
+    return this.request('/orders/driver/mine', 'GET');
+  }
+
+  async assignOrderDriver(orderId: string, driverId: string) {
+    return this.request(`/orders/${orderId}/assign`, 'PUT', { driverId });
+  }
+
+  async markOrderDelivered(orderId: string) {
+    return this.request(`/orders/${orderId}/driver/delivered`, 'PUT');
   }
 }
 

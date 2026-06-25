@@ -64,3 +64,35 @@ export const cashierOrAdminMiddleware = (
   }
   next();
 };
+
+export const onlineManagerOrAdminMiddleware = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!['admin', 'online_manager'].includes(req.user?.role ?? '')) {
+    res.status(403).json({ error: 'Accès responsable en ligne ou admin requis' });
+    return;
+  }
+  next();
+};
+
+export const driverMiddleware = (req: AuthRequest, res: Response, next: NextFunction): void => {
+  if (req.user?.role !== 'driver') {
+    res.status(403).json({ error: 'Accès livreur requis' });
+    return;
+  }
+  next();
+};
+
+export const onlineManagerAdminOrDriverMiddleware = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void => {
+  if (!['admin', 'online_manager', 'driver'].includes(req.user?.role ?? '')) {
+    res.status(403).json({ error: 'Accès non autorisé' });
+    return;
+  }
+  next();
+};

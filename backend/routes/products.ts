@@ -1,5 +1,6 @@
 import express, { Router, Response } from 'express';
 import Product from '../models/Product';
+import CatalogProduct from '../models/CatalogProduct';
 import QRCode from '../models/QRCode';
 import {
   authMiddleware,
@@ -16,6 +17,7 @@ import {
   hasStoredImage,
   sanitizeProductForClient,
 } from '../utils/productImage';
+import { buildCatalogProductImageUrl } from '../utils/catalogImage';
 import { v4 as uuidv4 } from 'uuid';
 
 const router: Router = express.Router();
@@ -43,6 +45,7 @@ async function createProductWithQr(
     category: string;
     stock: number;
     storeId?: string;
+    catalogProductId?: string;
   },
   file: Express.Multer.File | undefined,
   res: Response
@@ -209,11 +212,18 @@ router.get('/:id', async (req: express.Request, res: Response): Promise<void> =>
       return;
     }
 
-    await ensureProductQrImage(result.product);
+    if (!result.isCatalogEntry) {
+      await ensureProductQrImage(result.product as InstanceType<typeof Product>);
+    }
 
-    const productJson = sanitizeProductForClient(result.product);
+    const productJson = sanitizeProductForClient(
+      result.product as { _id: unknown; toObject?: () => Record<string, unknown> }
+    );
     res.json({
       ...productJson,
+      catalogProductId: result.isCatalogEntry
+        ? String(result.product._id)
+        : (productJson.catalogProductId as string | undefined),
       storeAvailability: result.storeAvailability,
       totalStock: result.storeAvailability.reduce((sum, row) => sum + row.stock, 0),
     });
@@ -229,12 +239,7 @@ router.post(
   productImageUpload.single('image'),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const { name, description, price, category, stock, storeId } = req.body;
-
-      if (!name || !description || price === undefined || !category) {
-        res.status(400).json({ error: 'Missing required fields' });
-        return;
-      }
+      const { name, description, price, category, stock, storeId, catalogProductId } = req.body;
 
       let targetStoreId = storeId as string | undefined;
 
@@ -244,9 +249,73 @@ router.post(
           res.status(400).json({ error: 'Aucune boutique assignée au gérant' });
           return;
         }
-      } else if (!targetStoreId) {
+      } else if (req.user?.role === 'admin' && !targetStoreId) {
         res.status(400).json({ error: 'storeId requis pour créer un produit' });
         return;
+      }
+
+      if (catalogProductId) {
+        const catalog = await CatalogProduct.findById(catalogProductId);
+        if (!catalog) {
+          res.status(404).json({ error: 'Produit en ligne introuvable' });
+          return;
+        }
+
+        if (!targetStoreId) {
+          res.status(400).json({ error: 'storeId requis' });
+          return;
+        }
+
+        const existing = await Product.findOne({ catalogProductId, storeId: targetStoreId });
+        if (existing) {
+          existing.stock += parseInt(String(stock), 10) || 0;
+          if (price !== undefined) existing.price = parseFloat(String(price));
+          await existing.save();
+          res.status(200).json(sanitizeProductForClient(existing));
+          return;
+        }
+
+        await createProductWithQr(
+          {
+            name: catalog.name,
+            description: catalog.description,
+            price: price !== undefined ? parseFloat(String(price)) : catalog.price,
+            category: catalog.category,
+            stock: parseInt(String(stock), 10) || 0,
+            storeId: targetStoreId,
+            catalogProductId: String(catalogProductId),
+          },
+          req.file,
+          res
+        );
+        return;
+      }
+
+      if (!name || !description || price === undefined || !category) {
+        res.status(400).json({ error: 'Missing required fields' });
+        return;
+      }
+
+      if (!targetStoreId) {
+        res.status(400).json({ error: 'storeId requis pour créer un produit' });
+        return;
+      }
+
+      const catalog = new CatalogProduct({
+        name,
+        description,
+        price: parseFloat(String(price)),
+        category,
+        createdBy: req.user?.userId,
+      });
+      await catalog.save();
+
+      if (req.file?.buffer?.length) {
+        catalog.imageData = req.file.buffer;
+        catalog.imageMimeType = req.file.mimetype;
+        catalog.imageStored = true;
+        catalog.image = buildCatalogProductImageUrl(catalog._id);
+        await catalog.save();
       }
 
       await createProductWithQr(
@@ -257,8 +326,9 @@ router.post(
           category,
           stock: parseInt(String(stock), 10) || 0,
           storeId: targetStoreId,
+          catalogProductId: String(catalog._id),
         },
-        req.file,
+        undefined,
         res
       );
     } catch (error) {
