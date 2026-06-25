@@ -9,8 +9,6 @@ import {
 
 const router: Router = express.Router();
 
-const STAFF_ROLES = ['online_manager', 'driver'] as const;
-
 router.get(
   '/drivers',
   authMiddleware,
@@ -27,14 +25,7 @@ router.get(
 
 router.get('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { role } = req.query;
-    const filter: Record<string, unknown> = {
-      role: { $in: STAFF_ROLES },
-    };
-    if (role && STAFF_ROLES.includes(role as (typeof STAFF_ROLES)[number])) {
-      filter.role = role;
-    }
-
+    const filter: Record<string, unknown> = { role: 'online_manager' };
     const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
     res.json(users);
   } catch {
@@ -44,7 +35,7 @@ router.get('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: R
 
 router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { name, email, password, phone, role } = req.body as {
+    const { name, email, password, phone } = req.body as {
       name?: string;
       email?: string;
       password?: string;
@@ -52,13 +43,8 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: 
       role?: string;
     };
 
-    if (!name || !email || !password || !role) {
-      res.status(400).json({ error: 'Nom, email, mot de passe et rôle requis' });
-      return;
-    }
-
-    if (!STAFF_ROLES.includes(role as (typeof STAFF_ROLES)[number])) {
-      res.status(400).json({ error: 'Rôle invalide (online_manager ou driver)' });
+    if (!name || !email || !password) {
+      res.status(400).json({ error: 'Nom, email et mot de passe requis' });
       return;
     }
 
@@ -72,7 +58,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: 
       name,
       email,
       password,
-      role,
+      role: 'online_manager',
       phone,
     });
     await user.save();
@@ -83,5 +69,46 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: 
     res.status(500).json({ error: 'Impossible de créer l\'utilisateur', details: String(error) });
   }
 });
+
+router.post(
+  '/drivers',
+  authMiddleware,
+  onlineManagerOrAdminMiddleware,
+  async (req: AuthRequest, res: Response): Promise<void> => {
+    try {
+      const { name, email, password, phone } = req.body as {
+        name?: string;
+        email?: string;
+        password?: string;
+        phone?: string;
+      };
+
+      if (!name || !email || !password) {
+        res.status(400).json({ error: 'Nom, email et mot de passe requis' });
+        return;
+      }
+
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        res.status(400).json({ error: 'Cet email est déjà utilisé' });
+        return;
+      }
+
+      const driver = new User({
+        name,
+        email,
+        password,
+        role: 'driver',
+        phone,
+      });
+      await driver.save();
+
+      const safe = await User.findById(driver._id).select('-password');
+      res.status(201).json(safe);
+    } catch (error) {
+      res.status(500).json({ error: 'Impossible de créer le livreur', details: String(error) });
+    }
+  }
+);
 
 export default router;

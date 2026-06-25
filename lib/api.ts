@@ -383,9 +383,17 @@ class ApiClient {
     email: string;
     password: string;
     phone?: string;
-    role: 'online_manager' | 'driver';
   }) {
     return this.request('/users', 'POST', data);
+  }
+
+  async createDriver(data: {
+    name: string;
+    email: string;
+    password: string;
+    phone?: string;
+  }) {
+    return this.request('/users/drivers', 'POST', data);
   }
 
   async getDrivers() {

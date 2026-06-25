@@ -12,7 +12,7 @@ const NAV = [
   { href: '/admin/stores', label: 'Boutiques', icon: Store },
   { href: '/admin/products', label: 'Produits', icon: Package },
   { href: '/admin/orders', label: 'Commandes', icon: ShoppingBag },
-  { href: '/admin/users', label: 'Équipe en ligne', icon: Users },
+  { href: '/admin/users', label: 'Resp. en ligne', icon: Users },
 ];
 
 function NavLink({
