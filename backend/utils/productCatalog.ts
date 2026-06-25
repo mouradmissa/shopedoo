@@ -107,7 +107,7 @@ export async function buildProductCatalog(query: { category?: string; search?: s
       price: catalog.price,
       category: catalog.category,
       image: resolveImage(catalog),
-      totalStock: 0,
+      totalStock: catalog.stock ?? 0,
       storeAvailability: [],
     };
 
@@ -205,7 +205,7 @@ export async function getProductWithAvailability(productId: string) {
       category: catalog.category,
       image: resolveImage(catalog),
       catalogProductId: catalog._id,
-      stock: storeAvailability.reduce((sum, row) => sum + row.stock, 0),
+      stock: (catalog.stock ?? 0) + storeAvailability.reduce((sum, row) => sum + row.stock, 0),
       storeId: representative?.storeId,
       toObject: () => ({
         _id: catalog._id,

@@ -10,6 +10,7 @@ export interface ICatalogProduct extends Document {
   imageMimeType?: string;
   imageStored?: boolean;
   createdBy?: Types.ObjectId;
+  stock: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -26,6 +27,7 @@ const catalogProductSchema = new Schema<ICatalogProduct>(
     imageMimeType: { type: String, default: 'image/jpeg' },
     imageStored: { type: Boolean, default: false },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    stock: { type: Number, default: 0, min: 0 },
     isActive: { type: Boolean, default: true },
   },
   { timestamps: true }

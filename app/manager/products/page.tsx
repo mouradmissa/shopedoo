@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link2, Plus, Trash2, X } from 'lucide-react';
 import { apiClient } from '@/lib/api';
 import { formatPrice } from '@/lib/currency';
 import { PRODUCT_CATEGORIES, CATEGORY_LABELS } from '@/lib/productCategories';
 import { ProductQrDisplay } from '@/components/products/ProductQrDisplay';
 import { ProductImageUpload } from '@/components/products/ProductImageUpload';
-import { resolveProductImageUrl } from '@/lib/productImage';
+import { resolveCatalogImageUrl, resolveProductImageUrl } from '@/lib/productImage';
 
 interface Product {
   _id: string;
@@ -26,11 +26,22 @@ interface Product {
 interface CatalogOption {
   _id: string;
   name: string;
+  description: string;
   price: number;
   category: string;
+  image?: string;
 }
 
 type AddMode = 'link' | 'new';
+
+const emptyLinkForm = () => ({
+  catalogProductId: '',
+  name: '',
+  description: '',
+  price: '',
+  category: PRODUCT_CATEGORIES[0],
+  stock: '',
+});
 
 export default function ManagerProductsPage() {
   const [storeId, setStoreId] = useState('');
@@ -41,7 +52,8 @@ export default function ManagerProductsPage() {
   const [addMode, setAddMode] = useState<AddMode>('link');
   const [qrProduct, setQrProduct] = useState<Product | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [linkForm, setLinkForm] = useState({ catalogProductId: '', stock: '', price: '' });
+  const [linkImageFile, setLinkImageFile] = useState<File | null>(null);
+  const [linkForm, setLinkForm] = useState(emptyLinkForm);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -49,6 +61,15 @@ export default function ManagerProductsPage() {
     category: PRODUCT_CATEGORIES[0],
     stock: '',
   });
+
+  const linkCatalogImageUrl = useMemo(() => {
+    if (!linkForm.catalogProductId) return undefined;
+    const selected = catalogOptions.find((c) => c._id === linkForm.catalogProductId);
+    if (!selected) return undefined;
+    return (
+      resolveProductImageUrl(selected.image, selected._id) || resolveCatalogImageUrl(selected._id)
+    );
+  }, [linkForm.catalogProductId, catalogOptions]);
 
   useEffect(() => {
     const load = async () => {
@@ -68,6 +89,24 @@ export default function ManagerProductsPage() {
     void load();
   }, []);
 
+  const fillLinkFormFromCatalog = (catalogProductId: string) => {
+    const selected = catalogOptions.find((c) => c._id === catalogProductId);
+    if (!selected) {
+      setLinkForm((prev) => ({ ...prev, catalogProductId }));
+      return;
+    }
+
+    setLinkForm({
+      catalogProductId,
+      name: selected.name,
+      description: selected.description || '',
+      price: String(selected.price),
+      category: selected.category || PRODUCT_CATEGORIES[0],
+      stock: '',
+    });
+    setLinkImageFile(null);
+  };
+
   const handleLinkCatalog = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!linkForm.catalogProductId) {
@@ -75,16 +114,18 @@ export default function ManagerProductsPage() {
       return;
     }
 
-    const selected = catalogOptions.find((c) => c._id === linkForm.catalogProductId);
-    const response = await apiClient.createProduct({
-      catalogProductId: linkForm.catalogProductId,
-      name: selected?.name || '',
-      description: '',
-      price: linkForm.price ? parseFloat(linkForm.price) : selected?.price || 0,
-      category: selected?.category || PRODUCT_CATEGORIES[0],
-      stock: parseInt(linkForm.stock, 10) || 0,
-      storeId,
-    });
+    const response = await apiClient.createProduct(
+      {
+        catalogProductId: linkForm.catalogProductId,
+        name: linkForm.name,
+        description: linkForm.description,
+        price: parseFloat(linkForm.price),
+        category: linkForm.category,
+        stock: parseInt(linkForm.stock, 10) || 0,
+        storeId,
+      },
+      linkImageFile
+    );
 
     if (response.success && response.data) {
       const existing = products.find((p) => p._id === (response.data as Product)._id);
@@ -93,7 +134,8 @@ export default function ManagerProductsPage() {
       } else {
         setProducts([response.data, ...products]);
       }
-      setLinkForm({ catalogProductId: '', stock: '', price: '' });
+      setLinkForm(emptyLinkForm());
+      setLinkImageFile(null);
       setShowForm(false);
     } else {
       alert(response.error || 'Erreur ajout stock');
@@ -200,7 +242,7 @@ export default function ManagerProductsPage() {
               <select
                 required
                 value={linkForm.catalogProductId}
-                onChange={(e) => setLinkForm({ ...linkForm, catalogProductId: e.target.value })}
+                onChange={(e) => fillLinkFormFromCatalog(e.target.value)}
                 className="w-full px-4 py-3 border border-border rounded-lg bg-background"
               >
                 <option value="">Choisir un produit du catalogue en ligne</option>
@@ -210,27 +252,73 @@ export default function ManagerProductsPage() {
                   </option>
                 ))}
               </select>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                  required
-                  type="number"
-                  placeholder="Quantité en stock"
-                  value={linkForm.stock}
-                  onChange={(e) => setLinkForm({ ...linkForm, stock: e.target.value })}
-                  className="px-4 py-3 border border-border rounded-lg bg-background"
-                />
-                <input
-                  type="number"
-                  step="0.001"
-                  placeholder="Prix boutique (optionnel)"
-                  value={linkForm.price}
-                  onChange={(e) => setLinkForm({ ...linkForm, price: e.target.value })}
-                  className="px-4 py-3 border border-border rounded-lg bg-background"
-                />
-              </div>
+
+              {linkForm.catalogProductId && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input
+                      required
+                      placeholder="Nom du produit"
+                      value={linkForm.name}
+                      onChange={(e) => setLinkForm({ ...linkForm, name: e.target.value })}
+                      className="px-4 py-3 border border-border rounded-lg bg-background"
+                    />
+                    <select
+                      value={linkForm.category}
+                      onChange={(e) => setLinkForm({ ...linkForm, category: e.target.value })}
+                      className="px-4 py-3 border border-border rounded-lg bg-background"
+                    >
+                      {PRODUCT_CATEGORIES.map((cat) => (
+                        <option key={cat} value={cat}>
+                          {CATEGORY_LABELS[cat]}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      required
+                      type="number"
+                      step="0.001"
+                      placeholder="Prix (DT)"
+                      value={linkForm.price}
+                      onChange={(e) => setLinkForm({ ...linkForm, price: e.target.value })}
+                      className="px-4 py-3 border border-border rounded-lg bg-background"
+                    />
+                    <input
+                      required
+                      type="number"
+                      placeholder="Quantité en stock"
+                      value={linkForm.stock}
+                      onChange={(e) => setLinkForm({ ...linkForm, stock: e.target.value })}
+                      className="px-4 py-3 border border-border rounded-lg bg-background"
+                    />
+                  </div>
+                  <textarea
+                    required
+                    rows={3}
+                    placeholder="Description"
+                    value={linkForm.description}
+                    onChange={(e) => setLinkForm({ ...linkForm, description: e.target.value })}
+                    className="w-full px-4 py-3 border border-border rounded-lg bg-background resize-none"
+                  />
+                  <ProductImageUpload
+                    value={linkImageFile}
+                    onChange={setLinkImageFile}
+                    existingImageUrl={linkCatalogImageUrl}
+                  />
+                  <p className="text-xs text-muted-foreground -mt-2">
+                    L&apos;image du catalogue en ligne est importée automatiquement. Vous pouvez la
+                    modifier ou en choisir une autre.
+                  </p>
+                </>
+              )}
+
               <div className="flex gap-2">
-                <button type="submit" className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-semibold">
-                  Ajouter le stock
+                <button
+                  type="submit"
+                  disabled={!linkForm.catalogProductId}
+                  className="px-6 py-2 bg-primary text-primary-foreground rounded-lg font-semibold disabled:opacity-50"
+                >
+                  Ajouter à la boutique
                 </button>
                 <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2 border border-border rounded-lg">
                   Annuler

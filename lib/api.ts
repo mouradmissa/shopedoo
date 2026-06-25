@@ -415,6 +415,7 @@ class ApiClient {
       description: string;
       price: number;
       category: string;
+      stock?: number;
     },
     imageFile?: File | null
   ) {
@@ -424,6 +425,7 @@ class ApiClient {
       formData.append('description', data.description);
       formData.append('price', String(data.price));
       formData.append('category', data.category);
+      if (data.stock !== undefined) formData.append('stock', String(data.stock));
       formData.append('image', imageFile);
       return this.requestForm('/catalog-products', 'POST', formData);
     }
@@ -437,6 +439,7 @@ class ApiClient {
       description: string;
       price: number;
       category: string;
+      stock: number;
       isActive: boolean;
     }>,
     imageFile?: File | null
@@ -447,6 +450,7 @@ class ApiClient {
       if (data.description) formData.append('description', data.description);
       if (data.price !== undefined) formData.append('price', String(data.price));
       if (data.category) formData.append('category', data.category);
+      if (data.stock !== undefined) formData.append('stock', String(data.stock));
       formData.append('image', imageFile);
       return this.requestForm(`/catalog-products/${id}`, 'PUT', formData);
     }

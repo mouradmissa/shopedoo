@@ -17,6 +17,7 @@ import {
   hasStoredImage,
   sanitizeProductForClient,
 } from '../utils/productImage';
+import type { ICatalogProduct } from '../models/CatalogProduct';
 import { buildCatalogProductImageUrl } from '../utils/catalogImage';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -37,6 +38,27 @@ async function attachUploadedImage(
   await product.save();
 }
 
+async function copyCatalogImageToProduct(
+  product: InstanceType<typeof Product>,
+  catalog: Pick<ICatalogProduct, 'imageData' | 'imageMimeType' | 'imageStored' | 'image'>
+) {
+  if (hasStoredImage(catalog)) {
+    product.imageData = catalog.imageData;
+    product.imageMimeType = catalog.imageMimeType || 'image/jpeg';
+    product.imageStored = true;
+    product.image = buildProductImageUrl(product._id);
+    await product.save();
+    return;
+  }
+
+  if (catalog.image) {
+    product.image = catalog.image;
+    product.imageStored = false;
+    product.imageData = undefined;
+    await product.save();
+  }
+}
+
 async function createProductWithQr(
   data: {
     name: string;
@@ -48,7 +70,8 @@ async function createProductWithQr(
     catalogProductId?: string;
   },
   file: Express.Multer.File | undefined,
-  res: Response
+  res: Response,
+  catalogForImage?: Pick<ICatalogProduct, 'imageData' | 'imageMimeType' | 'imageStored' | 'image'>
 ) {
   const product = new Product(data);
   await product.save();
@@ -68,7 +91,11 @@ async function createProductWithQr(
   product.qrCodeImage = qrCodeImage;
   await product.save();
 
-  await attachUploadedImage(product, file);
+  if (file) {
+    await attachUploadedImage(product, file);
+  } else if (catalogForImage) {
+    await copyCatalogImageToProduct(product, catalogForImage);
+  }
 
   res.status(201).json(sanitizeProductForClient(product));
 }
@@ -270,23 +297,32 @@ router.post(
         if (existing) {
           existing.stock += parseInt(String(stock), 10) || 0;
           if (price !== undefined) existing.price = parseFloat(String(price));
+          if (name) existing.name = String(name);
+          if (description) existing.description = String(description);
+          if (category) existing.category = String(category);
           await existing.save();
+          if (req.file) {
+            await attachUploadedImage(existing, req.file);
+          } else if (!hasStoredImage(existing) && !existing.image) {
+            await copyCatalogImageToProduct(existing, catalog);
+          }
           res.status(200).json(sanitizeProductForClient(existing));
           return;
         }
 
         await createProductWithQr(
           {
-            name: catalog.name,
-            description: catalog.description,
+            name: name ? String(name) : catalog.name,
+            description: description ? String(description) : catalog.description,
             price: price !== undefined ? parseFloat(String(price)) : catalog.price,
-            category: catalog.category,
+            category: category ? String(category) : catalog.category,
             stock: parseInt(String(stock), 10) || 0,
             storeId: targetStoreId,
             catalogProductId: String(catalogProductId),
           },
           req.file,
-          res
+          res,
+          catalog
         );
         return;
       }

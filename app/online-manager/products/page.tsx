@@ -14,6 +14,7 @@ interface CatalogItem {
   description: string;
   price: number;
   category: string;
+  stock?: number;
   image?: string;
   isActive?: boolean;
 }
@@ -28,6 +29,7 @@ export default function OnlineManagerProductsPage() {
     description: '',
     price: '',
     category: PRODUCT_CATEGORIES[0],
+    stock: '',
   });
 
   const load = async () => {
@@ -49,13 +51,14 @@ export default function OnlineManagerProductsPage() {
         description: formData.description,
         price: parseFloat(formData.price),
         category: formData.category,
+        stock: parseInt(formData.stock, 10) || 0,
       },
       imageFile
     );
 
     if (response.success && response.data) {
       setProducts([response.data, ...products]);
-      setFormData({ name: '', description: '', price: '', category: PRODUCT_CATEGORIES[0] });
+      setFormData({ name: '', description: '', price: '', category: PRODUCT_CATEGORIES[0], stock: '' });
       setImageFile(null);
       setShowForm(false);
     } else {
@@ -122,6 +125,14 @@ export default function OnlineManagerProductsPage() {
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               className="px-4 py-3 border border-border rounded-lg bg-background"
             />
+            <input
+              required
+              type="number"
+              placeholder="Stock en ligne"
+              value={formData.stock}
+              onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+              className="px-4 py-3 border border-border rounded-lg bg-background"
+            />
           </div>
           <textarea
             required
@@ -158,7 +169,9 @@ export default function OnlineManagerProductsPage() {
                 <h3 className="font-semibold truncate">{product.name}</h3>
                 <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
                 <p className="font-bold text-primary mt-1">{formatPrice(product.price)}</p>
-                <p className="text-xs text-muted-foreground">{CATEGORY_LABELS[product.category] || product.category}</p>
+                <p className="text-xs text-muted-foreground">
+                  {CATEGORY_LABELS[product.category] || product.category} · Stock: {product.stock ?? 0}
+                </p>
                 <button
                   type="button"
                   onClick={() => deleteProduct(product._id)}

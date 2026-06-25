@@ -103,7 +103,7 @@ router.post(
   productImageUpload.single('image'),
   async (req: AuthRequest, res: Response): Promise<void> => {
     try {
-      const { name, description, price, category } = req.body;
+      const { name, description, price, category, stock } = req.body;
 
       if (!name || !description || price === undefined || !category) {
         res.status(400).json({ error: 'Champs obligatoires manquants' });
@@ -115,6 +115,7 @@ router.post(
         description,
         price: parseFloat(String(price)),
         category,
+        stock: stock !== undefined ? parseInt(String(stock), 10) || 0 : 0,
         createdBy: req.user?.userId,
       });
       await catalog.save();
@@ -140,11 +141,12 @@ router.put(
         return;
       }
 
-      const { name, description, price, category, isActive } = req.body;
+      const { name, description, price, category, stock, isActive } = req.body;
       if (name) catalog.name = name;
       if (description) catalog.description = description;
       if (price !== undefined) catalog.price = parseFloat(String(price));
       if (category) catalog.category = category;
+      if (stock !== undefined) catalog.stock = parseInt(String(stock), 10) || 0;
       if (isActive !== undefined) catalog.isActive = isActive === 'true' || isActive === true;
 
       await catalog.save();
