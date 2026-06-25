@@ -156,6 +156,15 @@ router.get('/admin/all', authMiddleware, adminMiddleware, async (req: AuthReques
   }
 });
 
+router.delete('/admin/purge', authMiddleware, adminMiddleware, async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const result = await Order.deleteMany({});
+    res.json({ message: 'Toutes les commandes ont été supprimées', deletedCount: result.deletedCount });
+  } catch {
+    res.status(500).json({ error: 'Impossible de supprimer les commandes' });
+  }
+});
+
 router.get('/online/list', authMiddleware, onlineManagerOrAdminMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { status } = req.query;

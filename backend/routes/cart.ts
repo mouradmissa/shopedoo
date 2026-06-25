@@ -2,7 +2,7 @@ import express, { Router, Response } from 'express';
 import { Types } from 'mongoose';
 import Cart from '../models/Cart';
 import Product from '../models/Product';
-import { authMiddleware, AuthRequest } from '../middleware/auth';
+import { authMiddleware, adminMiddleware, AuthRequest } from '../middleware/auth';
 import { sanitizeProductForClient } from '../utils/productImage';
 
 const router: Router = express.Router();
@@ -192,6 +192,15 @@ router.delete('/clear', authMiddleware, async (req: AuthRequest, res: Response):
     res.json(serializeCart(cart));
   } catch (error) {
     res.status(500).json({ error: 'Failed to clear cart' });
+  }
+});
+
+router.delete('/admin/purge', authMiddleware, adminMiddleware, async (_req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const result = await Cart.deleteMany({});
+    res.json({ message: 'Tous les paniers ont été supprimés', deletedCount: result.deletedCount });
+  } catch {
+    res.status(500).json({ error: 'Impossible de supprimer les paniers' });
   }
 });
 
