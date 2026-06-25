@@ -32,6 +32,8 @@ export default function ProductDetailPage() {
         setProduct({
           ...data,
           stock: data.totalStock ?? data.stock ?? 0,
+          onlineStock: data.onlineStock ?? 0,
+          storeStock: data.storeStock,
           storeAvailability: data.storeAvailability,
         });
         setError('');

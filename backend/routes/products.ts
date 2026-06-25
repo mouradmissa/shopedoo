@@ -239,7 +239,9 @@ router.get('/:id', async (req: express.Request, res: Response): Promise<void> =>
         ? String(result.product._id)
         : (productJson.catalogProductId as string | undefined),
       storeAvailability: result.storeAvailability,
-      totalStock: result.storeAvailability.reduce((sum, row) => sum + row.stock, 0),
+      onlineStock: result.onlineStock,
+      storeStock: result.storeStock,
+      totalStock: result.totalStock,
     });
   } catch {
     res.status(500).json({ error: 'Failed to fetch product' });

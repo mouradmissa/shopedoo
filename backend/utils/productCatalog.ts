@@ -21,6 +21,8 @@ export interface CatalogProductView {
   price: number;
   category: string;
   image?: string;
+  onlineStock: number;
+  storeStock: number;
   totalStock: number;
   storeAvailability: StoreAvailability[];
 }
@@ -51,7 +53,9 @@ function appendStoreAvailability(
   const store = product.storeId;
   if (!store || store.isActive === false) return;
 
-  entry.totalStock += product.stock ?? 0;
+  const rowStock = product.stock ?? 0;
+  entry.storeStock += rowStock;
+  entry.totalStock = entry.onlineStock + entry.storeStock;
   if (product.price < entry.price) {
     entry.price = product.price;
   }
@@ -61,7 +65,7 @@ function appendStoreAvailability(
     storeName: store.name,
     city: store.city,
     governorate: store.governorate,
-    stock: product.stock ?? 0,
+    stock: rowStock,
     productId: String(product._id),
     price: product.price,
   });
@@ -107,6 +111,8 @@ export async function buildProductCatalog(query: { category?: string; search?: s
       price: catalog.price,
       category: catalog.category,
       image: resolveImage(catalog),
+      onlineStock: catalog.stock ?? 0,
+      storeStock: 0,
       totalStock: catalog.stock ?? 0,
       storeAvailability: [],
     };
@@ -156,6 +162,8 @@ export async function buildProductCatalog(query: { category?: string; search?: s
         price: product.price,
         category: product.category,
         image: imageUrl,
+        onlineStock: 0,
+        storeStock: 0,
         totalStock: 0,
         storeAvailability: [],
       });
@@ -197,6 +205,9 @@ export async function getProductWithAvailability(productId: string) {
       }
     }
 
+    const storeStock = storeAvailability.reduce((sum, row) => sum + row.stock, 0);
+    const onlineStock = catalog.stock ?? 0;
+
     const virtualProduct = {
       _id: catalog._id,
       name: catalog.name,
@@ -205,7 +216,9 @@ export async function getProductWithAvailability(productId: string) {
       category: catalog.category,
       image: resolveImage(catalog),
       catalogProductId: catalog._id,
-      stock: (catalog.stock ?? 0) + storeAvailability.reduce((sum, row) => sum + row.stock, 0),
+      onlineStock,
+      storeStock,
+      stock: onlineStock + storeStock,
       storeId: representative?.storeId,
       toObject: () => ({
         _id: catalog._id,
@@ -215,10 +228,19 @@ export async function getProductWithAvailability(productId: string) {
         category: catalog.category,
         image: resolveImage(catalog),
         catalogProductId: catalog._id,
+        onlineStock,
+        storeStock,
       }),
     };
 
-    return { product: virtualProduct, storeAvailability, isCatalogEntry: true };
+    return {
+      product: virtualProduct,
+      storeAvailability,
+      isCatalogEntry: true,
+      onlineStock,
+      storeStock,
+      totalStock: onlineStock + storeStock,
+    };
   }
 
   const product = await Product.findById(productId).populate(
@@ -229,6 +251,7 @@ export async function getProductWithAvailability(productId: string) {
   if (!product) return null;
 
   if (product.catalogProductId) {
+    const catalogDoc = await CatalogProduct.findById(product.catalogProductId).select('stock').lean();
     const siblings = await Product.find({ catalogProductId: product.catalogProductId })
       .populate('storeId', 'name city governorate address isActive')
       .select('stock price storeId')
@@ -250,7 +273,17 @@ export async function getProductWithAvailability(productId: string) {
       }
     }
 
-    return { product, storeAvailability, isCatalogEntry: false };
+    const storeStock = storeAvailability.reduce((sum, row) => sum + row.stock, 0);
+    const onlineStock = catalogDoc?.stock ?? 0;
+
+    return {
+      product,
+      storeAvailability,
+      isCatalogEntry: false,
+      onlineStock,
+      storeStock,
+      totalStock: onlineStock + storeStock,
+    };
   }
 
   const siblings = await Product.find({
@@ -277,5 +310,14 @@ export async function getProductWithAvailability(productId: string) {
     }
   }
 
-  return { product, storeAvailability, isCatalogEntry: false };
+  const storeStock = storeAvailability.reduce((sum, row) => sum + row.stock, 0);
+
+  return {
+    product,
+    storeAvailability,
+    isCatalogEntry: false,
+    onlineStock: 0,
+    storeStock,
+    totalStock: storeStock,
+  };
 }

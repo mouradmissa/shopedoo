@@ -6,6 +6,7 @@ import { ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { formatCategory } from '@/lib/productCategories';
 import { formatPrice } from '@/lib/currency';
 import { resolveProductImageUrl } from '@/lib/productImage';
+import { OnlineStockBadge } from '@/components/products/OnlineStockBadge';
 
 export interface StoreAvailability {
   storeId: string;
@@ -24,6 +25,8 @@ export interface ProductItem {
   price: number;
   category: string;
   stock: number;
+  onlineStock?: number;
+  storeStock?: number;
   totalStock?: number;
   image?: string;
   qrCode?: string;
@@ -54,6 +57,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const [showAvailability, setShowAvailability] = useState(false);
   const displayStock = product.totalStock ?? product.stock;
+  const onlineStock = product.onlineStock ?? 0;
   const availableStores =
     product.storeAvailability?.filter((row) => row.stock > 0) ?? [];
   const imageSrc = resolveProductImageUrl(product.image, product._id);
@@ -91,6 +95,8 @@ export function ProductCard({
           </h3>
         </Link>
         <p className="text-xs text-muted-foreground line-clamp-2 mb-2 flex-1">{product.description}</p>
+
+        <OnlineStockBadge onlineStock={onlineStock} className="mb-2" />
 
         {availableStores.length > 0 && (
           <div className="mb-3">

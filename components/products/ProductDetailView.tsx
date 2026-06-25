@@ -6,6 +6,7 @@ import { ArrowLeft, ChevronDown, ChevronUp, Loader2, MapPin, Package, ShoppingCa
 import { formatCategory } from '@/lib/productCategories';
 import { formatPrice } from '@/lib/currency';
 import { ProductQrDisplay } from '@/components/products/ProductQrDisplay';
+import { OnlineStockBadge } from '@/components/products/OnlineStockBadge';
 import type { ProductItem } from './ProductCard';
 
 interface ProductDetailViewProps {
@@ -45,6 +46,7 @@ export function ProductDetailView({
 }: ProductDetailViewProps) {
   const [showAvailability, setShowAvailability] = useState(false);
   const totalStock = product.totalStock ?? product.stock;
+  const onlineStock = product.onlineStock ?? 0;
   const stock = stockInfo(totalStock);
   const showCustomerCta = variant === 'customer' && onAddToCart;
   const storeRows = product.storeAvailability ?? [];
@@ -92,11 +94,14 @@ export function ProductDetailView({
             </p>
           </div>
 
-          <span
-            className={`inline-block px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border ${stock.className}`}
-          >
-            {stock.label}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-block px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border ${stock.className}`}
+            >
+              {stock.label}
+            </span>
+            {variant === 'customer' && <OnlineStockBadge onlineStock={onlineStock} />}
+          </div>
 
           <div>
             <h2 className="font-semibold mb-2">Description</h2>
