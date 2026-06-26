@@ -27,7 +27,7 @@ async function attachUploadedImage(
   catalog.imageData = file.buffer;
   catalog.imageMimeType = file.mimetype;
   catalog.imageStored = true;
-  catalog.image = buildCatalogProductImageUrl(catalog._id);
+  catalog.image = buildCatalogProductImageUrl(String(catalog._id));
   await catalog.save();
 }
 

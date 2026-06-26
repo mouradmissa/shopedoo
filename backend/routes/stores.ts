@@ -1,4 +1,5 @@
 import express, { Router, Response } from 'express';
+import { Types } from 'mongoose';
 import Store from '../models/Store';
 import User from '../models/User';
 import {
@@ -133,7 +134,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req: AuthRequest, res: 
     });
     await store.save();
 
-    managerUser.storeId = store._id;
+    managerUser.storeId = store._id as Types.ObjectId;
     await managerUser.save();
 
     const populated = await Store.findById(store._id).populate('managerId', 'name email phone');

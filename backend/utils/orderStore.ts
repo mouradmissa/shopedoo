@@ -16,5 +16,5 @@ export async function resolveStoreIdFromProductIds(
 
 export async function getManagerStoreId(userId: string): Promise<Types.ObjectId | null> {
   const store = await Store.findOne({ managerId: userId }).select('_id');
-  return store?._id ?? null;
+  return (store?._id as Types.ObjectId | undefined) ?? null;
 }

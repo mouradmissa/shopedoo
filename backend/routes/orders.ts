@@ -387,7 +387,7 @@ router.put('/:id/assign', authMiddleware, onlineManagerOrAdminMiddleware, async 
       return;
     }
 
-    order.assignedDriverId = driver._id;
+    order.assignedDriverId = driver._id as Types.ObjectId;
     order.assignedAt = new Date();
     if (order.status === 'paid') {
       order.status = 'shipped';

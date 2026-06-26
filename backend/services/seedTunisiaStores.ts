@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import User from '../models/User';
 import Store from '../models/Store';
 import {
@@ -103,7 +104,7 @@ async function ensureStoreForGovernorate(governorate: string): Promise<{
   });
   await store.save();
 
-  manager.storeId = store._id;
+  manager.storeId = store._id as Types.ObjectId;
   await manager.save();
 
   details.push(`${governorate}: boutique créée — ${storeName}`);
@@ -134,7 +135,7 @@ export async function seedTunisiaStores(): Promise<SeedTunisiaResult> {
     details.push(...cashierResult.details);
     cashiersCreated += cashierResult.created;
 
-    const productResult = await ensureProductsForStore(storeResult.store._id, governorate);
+    const productResult = await ensureProductsForStore(String(storeResult.store._id), governorate);
     details.push(...productResult.details);
     productsCreated += productResult.created;
   }
