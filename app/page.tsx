@@ -29,7 +29,7 @@ const CATEGORIES = [
 const FEATURES = [
   {
     icon: Smartphone,
-    title: 'Catalogue télécom complet',
+    title: 'Catalogue complet',
     text: 'Forfaits, accessoires et services sélectionnés pour vous, mis à jour en temps réel.',
   },
   {
@@ -119,10 +119,10 @@ export default function Home() {
               <div className="text-center lg:text-left">
                 <span className="shop-badge mb-4">
                   <Sparkles className="w-3.5 h-3.5" />
-                  Boutique officielle télécom
+                  Boutique officielle Shop-Edoo
                 </span>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-balance leading-tight mb-4">
-                  La télécom qui vous suit{' '}
+                  Shop-Edoo vous accompagne{' '}
                   <span className="text-primary">partout en Tunisie</span>
                 </h1>
                 <p className="text-base sm:text-lg text-muted-foreground text-balance max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">

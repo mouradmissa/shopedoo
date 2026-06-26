@@ -11,8 +11,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'shopedoo - Plateforme E-commerce Ooredoo',
-  description: 'Parcourez et achetez des produits télécom avec scan QR',
+  title: 'shopedoo - Boutique en ligne',
+  description: 'Parcourez et achetez nos produits avec scan QR',
   icons: {
     icon: '/shopedoo-logo.png',
     apple: '/shopedoo-logo.png',

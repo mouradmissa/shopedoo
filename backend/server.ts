@@ -1,6 +1,7 @@
 import express, { Express } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import connectDB from './config/mongodb';
 import authRoutes from './routes/auth';
 import productRoutes from './routes/products';
@@ -11,7 +12,7 @@ import catalogProductRoutes from './routes/catalogProducts';
 import userRoutes from './routes/users';
 import paymentRoutes, { handleStripeWebhook } from './routes/payment';
 
-dotenv.config({ path: 'backend/.env' });
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
@@ -60,8 +61,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 async function startServer() {
   await connectDB();
 
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on http://0.0.0.0:${PORT}`);
     console.log(`Frontend URL: ${FRONTEND_URL}`);
   });
 }

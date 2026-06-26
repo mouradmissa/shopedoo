@@ -1,6 +1,6 @@
+import { randomUUID } from 'crypto';
 import QRCodeLib from 'qrcode';
 import { HydratedDocument } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
 import { IProduct } from '../models/Product';
 import QRCode from '../models/QRCode';
 
@@ -27,7 +27,7 @@ export async function ensureProductQr(product: HydratedDocument<IProduct>): Prom
     if (qrRecord) {
       product.qrCode = qrRecord.code;
     } else {
-      const code = `SHOPEDOO-${uuidv4()}`;
+      const code = `SHOPEDOO-${randomUUID()}`;
       qrRecord = await new QRCode({ productId: product._id, code }).save();
       product.qrCode = code;
     }

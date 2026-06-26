@@ -42,7 +42,7 @@ export default function SignUpPage() {
         <div className="mb-6 sm:mb-8 text-center">
           <h1 className="text-2xl sm:text-3xl font-bold mb-2">Créer un compte</h1>
           <p className="text-muted-foreground text-sm mb-1">
-            Rejoignez shopedoo et profitez du catalogue télécom partout en Tunisie.
+            Rejoignez shopedoo et profitez du catalogue partout en Tunisie.
           </p>
         </div>
 

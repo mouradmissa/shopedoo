@@ -33,7 +33,7 @@ async function attachUploadedImage(
   product.imageData = file.buffer;
   product.imageMimeType = file.mimetype;
   product.imageStored = true;
-  product.image = buildProductImageUrl(product._id);
+  product.image = buildProductImageUrl(String(product._id));
   await product.save();
 }
 
@@ -45,7 +45,7 @@ async function copyCatalogImageToProduct(
     product.imageData = catalog.imageData;
     product.imageMimeType = catalog.imageMimeType || 'image/jpeg';
     product.imageStored = true;
-    product.image = buildProductImageUrl(product._id);
+    product.image = buildProductImageUrl(String(product._id));
     await product.save();
     return;
   }
@@ -340,7 +340,7 @@ router.post(
         catalog.imageData = req.file.buffer;
         catalog.imageMimeType = req.file.mimetype;
         catalog.imageStored = true;
-        catalog.image = buildCatalogProductImageUrl(catalog._id);
+        catalog.image = buildCatalogProductImageUrl(String(catalog._id));
         await catalog.save();
       }
 

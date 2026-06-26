@@ -1,0 +1,64 @@
+{
+  "expo": {
+    "name": "Shop-Edoo",
+    "slug": "shop-edoo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "shopedoo",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ff3131"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.shopedoo.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Shop-Edoo utilise la caméra pour scanner les codes QR des produits et factures.",
+        "NSLocalNetworkUsageDescription": "Shop-Edoo se connecte au serveur de développement sur votre réseau local."
+      }
+    },
+    "android": {
+      "package": "com.shopedoo.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#ff3131",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": ["CAMERA"],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Autoriser Shop-Edoo à utiliser la caméra pour scanner les QR codes."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Shop-Edoo accède à vos photos pour ajouter des images produits."
+        }
+      ],
+      [
+        "@stripe/stripe-react-native",
+        {
+          "merchantIdentifier": "merchant.com.shopedoo.app",
+          "enableGooglePay": true
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "shop-edoo-mobile"
+      }
+    }
+  }
+}

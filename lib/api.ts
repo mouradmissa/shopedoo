@@ -289,6 +289,15 @@ class ApiClient {
     return this.request(`/orders/${id}`, 'GET');
   }
 
+  async getOrderPaymentStatus(id: string) {
+    return this.request<{
+      status: string;
+      paidAt?: string;
+      paymentMethod?: string;
+      totalAmount?: number;
+    }>(`/orders/${id}/payment-status`, 'GET');
+  }
+
   async createOrder(shippingAddress: string, paymentMethod: string) {
     return this.request('/orders/checkout', 'POST', { shippingAddress, paymentMethod });
   }

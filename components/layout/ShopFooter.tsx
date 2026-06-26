@@ -18,7 +18,7 @@ export function ShopFooter() {
             <div className="sm:col-span-2 lg:col-span-1">
               <ShopEdooLogo variant="footer" className="mb-4" />
               <p className="text-sm text-muted-foreground leading-relaxed max-w-xs">
-                La boutique télécom qui réunit forfaits, équipements et services — en ligne et en
+                La boutique qui réunit forfaits, équipements et services — en ligne et en
                 magasin, dans toute la Tunisie.
               </p>
             </div>

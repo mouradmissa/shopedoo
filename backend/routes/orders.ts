@@ -7,6 +7,7 @@ import Product from '../models/Product';
 import User from '../models/User';
 import { authMiddleware, adminMiddleware, cashierOrAdminMiddleware, onlineManagerOrAdminMiddleware, driverMiddleware, AuthRequest } from '../middleware/auth';
 import { getManagerStoreId, resolveStoreIdFromProductIds } from '../utils/orderStore';
+import { resolveRefId } from '../utils/orderAccess';
 
 const router: Router = express.Router();
 const STORE_PICKUP = 'Retrait en magasin - Caisse shopedoo';
@@ -214,6 +215,32 @@ router.get('/driver/archive', authMiddleware, driverMiddleware, async (req: Auth
   }
 });
 
+router.get('/:id/payment-status', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const order = await Order.findById(req.params.id).select('userId status paidAt paymentMethod totalAmount');
+
+    if (!order) {
+      res.status(404).json({ error: 'Order not found' });
+      return;
+    }
+
+    const isOwner = resolveRefId(order.userId) === req.user?.userId;
+    if (!isOwner) {
+      res.status(403).json({ error: 'Unauthorized' });
+      return;
+    }
+
+    res.json({
+      status: order.status,
+      paidAt: order.paidAt,
+      paymentMethod: order.paymentMethod,
+      totalAmount: order.totalAmount,
+    });
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch payment status' });
+  }
+});
+
 router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const order = await Order.findById(req.params.id).populate(orderListPopulate);
@@ -223,7 +250,7 @@ router.get('/:id', authMiddleware, async (req: AuthRequest, res: Response): Prom
       return;
     }
 
-    const isOwner = order.userId.toString() === req.user?.userId;
+    const isOwner = resolveRefId(order.userId) === req.user?.userId;
     const isStaff = ['admin', 'cashier'].includes(req.user?.role ?? '');
 
     if (req.user?.role === 'manager') {

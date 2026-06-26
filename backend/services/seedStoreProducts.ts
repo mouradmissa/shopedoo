@@ -1,5 +1,5 @@
+import { randomUUID } from 'crypto';
 import { Types } from 'mongoose';
-import { v4 as uuidv4 } from 'uuid';
 import Product from '../models/Product';
 import QRCode from '../models/QRCode';
 import { SEED_PRODUCTS } from '../data/seedProducts';
@@ -35,7 +35,7 @@ export async function ensureProductsForStore(
     });
     await product.save();
 
-    const code = `SHOPEDOO-${uuidv4()}`;
+    const code = `SHOPEDOO-${randomUUID()}`;
     const payload = getProductPageUrl(String(product._id));
     const qrCodeImage = await generateProductQrImage(payload);
 

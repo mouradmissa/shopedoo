@@ -26,7 +26,7 @@ function LogoImage({
   return (
     <Image
       src={LOGO_SRC}
-      alt="shopedoo — Ooredoo"
+      alt="shopedoo"
       width={width}
       height={height}
       className={cn('object-contain rounded-md w-auto max-w-full h-auto', imageClassName)}
