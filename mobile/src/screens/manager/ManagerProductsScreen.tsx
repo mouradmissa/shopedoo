@@ -243,7 +243,6 @@ export function ManagerProductsScreen() {
           product={detailProduct}
           onBack={() => setDetailProduct(null)}
           backLabel="Produits magasin"
-          showQr
           canAddToCart={false}
         />
       </View>

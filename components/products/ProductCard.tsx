@@ -32,6 +32,7 @@ export interface ProductItem {
   qrCode?: string;
   qrCodeImage?: string;
   qrCodePayload?: string;
+  defaultProductId?: string;
   storeAvailability?: StoreAvailability[];
 }
 

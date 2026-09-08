@@ -226,8 +226,36 @@ router.get('/:id', async (req: express.Request, res: Response): Promise<void> =>
       return;
     }
 
-    if (!result.isCatalogEntry) {
+    let qrMeta: {
+      qrCode?: string;
+      qrCodeImage?: string;
+      qrCodePayload?: string;
+      defaultProductId?: string;
+    } = {};
+
+    if (result.isCatalogEntry) {
+      const storeProductId =
+        result.storeAvailability.find((row) => row.stock > 0)?.productId ??
+        result.storeAvailability[0]?.productId;
+
+      if (storeProductId) {
+        const storeProduct = await Product.findById(storeProductId);
+        if (storeProduct) {
+          await ensureProductQr(storeProduct);
+          qrMeta = {
+            qrCode: storeProduct.qrCode,
+            qrCodeImage: storeProduct.qrCodeImage,
+            qrCodePayload: storeProduct.qrCodePayload,
+            defaultProductId: storeProductId,
+          };
+        }
+      }
+    } else {
       await ensureProductQr(result.product as InstanceType<typeof Product>);
+      const storeProduct = result.product as InstanceType<typeof Product>;
+      qrMeta = {
+        defaultProductId: String(storeProduct._id),
+      };
     }
 
     const productJson = sanitizeProductForClient(
@@ -235,6 +263,7 @@ router.get('/:id', async (req: express.Request, res: Response): Promise<void> =>
     );
     res.json({
       ...productJson,
+      ...qrMeta,
       catalogProductId: result.isCatalogEntry
         ? String(result.product._id)
         : (productJson.catalogProductId as string | undefined),

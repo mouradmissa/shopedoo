@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import QRCodeLib from 'qrcode';
 import { Download } from 'lucide-react';
 import { API_BASE } from '@/lib/api';
 
@@ -20,29 +22,52 @@ export function ProductQrDisplay({
   productId,
   compact = false,
 }: ProductQrDisplayProps) {
-  const imageSrc =
-    qrCodeImage || (productId ? `${API_BASE}/api/products/${productId}/qr-image` : undefined);
+  const [imageFailed, setImageFailed] = useState(false);
+  const [generatedQr, setGeneratedQr] = useState<string | null>(null);
 
-  if (!qrCode && !imageSrc) return null;
+  const apiImageSrc = productId ? `${API_BASE}/api/products/${productId}/qr-image` : undefined;
+  const remoteImageSrc =
+    qrCodeImage || (apiImageSrc && !imageFailed ? apiImageSrc : undefined);
 
-  const downloadHref = productId
-    ? `${API_BASE}/api/products/${productId}/qr-image`
-    : qrCodeImage;
-
-  const handleDownload = () => {
-    if (qrCodeImage) {
-      const link = document.createElement('a');
-      link.href = qrCodeImage;
-      link.download = `qr-${qrCode || productName || 'produit'}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  useEffect(() => {
+    if (!qrCodePayload) {
+      setGeneratedQr(null);
+      return;
+    }
+    if (remoteImageSrc && !imageFailed) {
+      setGeneratedQr(null);
       return;
     }
 
-    if (downloadHref) {
-      window.open(downloadHref, '_blank', 'noopener,noreferrer');
-    }
+    let cancelled = false;
+    void QRCodeLib.toDataURL(qrCodePayload, { width: 512, margin: 2, errorCorrectionLevel: 'M' })
+      .then((url) => {
+        if (!cancelled) setGeneratedQr(url);
+      })
+      .catch(() => {
+        if (!cancelled) setGeneratedQr(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [qrCodePayload, remoteImageSrc, imageFailed]);
+
+  const displaySrc = remoteImageSrc || generatedQr;
+
+  if (!qrCode && !displaySrc && !qrCodePayload) return null;
+
+  const downloadHref = displaySrc || (productId ? apiImageSrc : undefined);
+
+  const handleDownload = () => {
+    if (!downloadHref) return;
+
+    const link = document.createElement('a');
+    link.href = downloadHref;
+    link.download = `qr-${qrCode || productName || 'produit'}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -51,23 +76,35 @@ export function ProductQrDisplay({
     >
       <p className={`font-semibold ${compact ? 'text-sm mb-2' : 'mb-3'}`}>Code QR produit</p>
 
-      {imageSrc ? (
-        <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-3">
+        {displaySrc ? (
           <img
-            src={imageSrc}
+            src={displaySrc}
             alt={`QR code ${productName || 'produit'}`}
             className={`rounded-lg border border-border bg-white p-2 ${
               compact ? 'w-28 h-28' : 'w-40 h-40 sm:w-48 sm:h-48'
             } object-contain`}
+            onError={() => setImageFailed(true)}
           />
-          {qrCode && (
-            <p className="text-xs text-muted-foreground break-all text-center max-w-full">
-              {qrCode}
-            </p>
-          )}
-          {qrCodePayload && (
-            <p className="text-xs text-primary break-all text-center max-w-full">{qrCodePayload}</p>
-          )}
+        ) : (
+          <div
+            className={`rounded-lg border border-border bg-muted animate-pulse ${
+              compact ? 'w-28 h-28' : 'w-40 h-40 sm:w-48 sm:h-48'
+            }`}
+          />
+        )}
+
+        {qrCode ? (
+          <p className="text-xs text-muted-foreground break-all text-center max-w-full font-mono">
+            {qrCode}
+          </p>
+        ) : null}
+
+        {productName ? (
+          <p className="text-xs font-semibold text-center text-foreground">{productName}</p>
+        ) : null}
+
+        {downloadHref ? (
           <button
             type="button"
             onClick={handleDownload}
@@ -76,10 +113,8 @@ export function ProductQrDisplay({
             <Download className="w-4 h-4" />
             Télécharger l&apos;image QR
           </button>
-        </div>
-      ) : (
-        <div className="py-8" />
-      )}
+        ) : null}
+      </div>
     </div>
   );
 }

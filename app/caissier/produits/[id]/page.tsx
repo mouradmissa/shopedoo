@@ -19,7 +19,15 @@ export default function CashierProductDetailPage() {
       setLoading(true);
       const response = await apiClient.getProduct(id);
       if (response.success && response.data) {
-        setProduct(response.data);
+        const data = response.data as ProductItem;
+        setProduct({
+          ...data,
+          stock: data.totalStock ?? data.stock ?? 0,
+          qrCode: data.qrCode,
+          qrCodeImage: data.qrCodeImage,
+          qrCodePayload: data.qrCodePayload,
+          defaultProductId: data.defaultProductId,
+        });
         setError('');
       } else {
         setError(response.error || 'Produit introuvable');

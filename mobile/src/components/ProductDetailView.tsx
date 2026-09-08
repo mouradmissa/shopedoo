@@ -25,7 +25,6 @@ interface Props {
   onAddToCart?: () => void;
   canAddToCart?: boolean;
   isAdding?: boolean;
-  showQr?: boolean;
   showBackButton?: boolean;
 }
 
@@ -45,6 +44,15 @@ function stockInfo(stock: number) {
   };
 }
 
+function resolveQrProductId(product: ProductItem): string | undefined {
+  return (
+    product.defaultProductId ||
+    product.storeAvailability?.find((row) => row.stock > 0)?.productId ||
+    product.storeAvailability?.[0]?.productId ||
+    product._id
+  );
+}
+
 export function ProductDetailView({
   product,
   onBack,
@@ -52,7 +60,6 @@ export function ProductDetailView({
   onAddToCart,
   canAddToCart = true,
   isAdding = false,
-  showQr = false,
   showBackButton = true,
 }: Props) {
   const [showAvailability, setShowAvailability] = useState(false);
@@ -63,9 +70,9 @@ export function ProductDetailView({
   const stock = stockInfo(totalStock);
   const imageUrl = resolveCatalogItemImageUrl(product);
   const storeRows = product.storeAvailability ?? [];
+  const qrProductId = resolveQrProductId(product);
   const hasQr =
-    showQr &&
-    (product.qrCode || product.qrCodeImage || product.qrCodePayload || product._id);
+    Boolean(product.qrCode || product.qrCodeImage || product.qrCodePayload || qrProductId);
 
   return (
     <View style={styles.container}>
@@ -120,7 +127,7 @@ export function ProductDetailView({
               qrCodeImage={product.qrCodeImage}
               qrCodePayload={product.qrCodePayload}
               productName={product.name}
-              productId={product._id}
+              productId={qrProductId}
             />
           ) : null}
 

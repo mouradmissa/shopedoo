@@ -55,7 +55,6 @@ export function CashierProductsScreen() {
         }}
         backLabel="Produits"
         canAddToCart={false}
-        showQr
       />
     );
   }

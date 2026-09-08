@@ -35,6 +35,15 @@ function stockInfo(stock: number) {
   };
 }
 
+function resolveQrProductId(product: ProductItem): string | undefined {
+  return (
+    product.defaultProductId ||
+    product.storeAvailability?.find((row) => row.stock > 0)?.productId ||
+    product.storeAvailability?.[0]?.productId ||
+    product._id
+  );
+}
+
 export function ProductDetailView({
   product,
   backHref,
@@ -50,6 +59,10 @@ export function ProductDetailView({
   const stock = stockInfo(totalStock);
   const showCustomerCta = variant === 'customer' && onAddToCart;
   const storeRows = product.storeAvailability ?? [];
+  const qrProductId = resolveQrProductId(product);
+  const hasQr = Boolean(
+    product.qrCode || product.qrCodeImage || product.qrCodePayload || qrProductId
+  );
 
   return (
     <div className={`flex-1 page-container py-4 sm:py-6 ${showCustomerCta ? 'pb-28 sm:pb-6' : ''}`}>
@@ -110,6 +123,16 @@ export function ProductDetailView({
             </p>
           </div>
 
+          {hasQr && (
+            <ProductQrDisplay
+              qrCode={product.qrCode}
+              qrCodeImage={product.qrCodeImage}
+              qrCodePayload={product.qrCodePayload}
+              productName={product.name}
+              productId={qrProductId}
+            />
+          )}
+
           {storeRows.length > 0 && variant === 'customer' && (
             <div className="rounded-xl border border-border bg-card overflow-hidden">
               <button
@@ -151,16 +174,6 @@ export function ProductDetailView({
                 </ul>
               )}
             </div>
-          )}
-
-          {(product.qrCode || product.qrCodeImage) && (
-            <ProductQrDisplay
-              qrCode={product.qrCode}
-              qrCodeImage={product.qrCodeImage}
-              qrCodePayload={product.qrCodePayload}
-              productName={product.name}
-              productId={product._id}
-            />
           )}
 
           {showCustomerCta && (

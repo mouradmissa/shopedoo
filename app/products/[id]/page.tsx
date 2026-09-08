@@ -35,6 +35,10 @@ export default function ProductDetailPage() {
           onlineStock: data.onlineStock ?? 0,
           storeStock: data.storeStock,
           storeAvailability: data.storeAvailability,
+          qrCode: data.qrCode,
+          qrCodeImage: data.qrCodeImage,
+          qrCodePayload: data.qrCodePayload,
+          defaultProductId: data.defaultProductId,
         });
         setError('');
       } else {
