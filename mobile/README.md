@@ -1,32 +1,26 @@
 # Shop-Edoo Mobile
 
-Application React Native (Expo) avec le **même design et les mêmes fonctionnalités** que le site web Shop-Edoo.
+Application React Native (Expo SDK **57**) alignée sur le site web Shop-Edoo.
 
-## Design aligné sur le web
+## Design
 
 - Couleurs : rouge `#ff3131`, jaune offre `#f5c400`, fond blanc
-- Logo Shop-Edoo officiel
-- Hero avec dégradé, statistiques, cartes fonctionnalités
-- Bannière offre limitée
-- Filtres catégories en pilules
-- Cartes produits avec stock, disponibilité par gouvernorat
-- Header boutique identique (Accueil, Catalogue, Scanner, Panier)
-- Footer avec liens et engagements
+- Hero, filtres catégories, cartes produits, header boutique (Accueil, Catalogue, Scanner, Panier)
 
 ## Fonctionnalités
 
-| Zone | Fonctionnalités |
-|------|-----------------|
-| **Client** | Catalogue, détail produit, panier, checkout (3 paiements), QR scanner, auth |
+| Zone | Contenu |
+|------|---------|
+| **Client** | Catalogue, détail produit + **QR**, panier, checkout, scanner QR, auth |
 | **Admin** | Dashboard, boutiques, produits, commandes |
-| **Manager** | Dashboard magasin, paiements, produits |
-| **Caissier** | Accueil, produits, confirmation facture QR |
+| **Manager** | Dashboard magasin, paiements, produits, caissiers |
+| **Caissier** | Produits, confirmation facture QR |
 | **Gestionnaire en ligne** | Catalogue, commandes livraison, livreurs |
 | **Livreur** | Livraisons actives + archives |
 
-## Android & iOS
+Popup de remerciement et export PDF du reçu après checkout (comme sur le web).
 
-### Développement (Expo Go)
+## Développement (Expo Go)
 
 ```bash
 cd mobile
@@ -35,47 +29,52 @@ npm install
 npm start
 ```
 
-- Android : appuyez sur `a` ou scannez le QR avec Expo Go
-- iOS : scannez le QR avec l'app **Expo Go** (iPhone)
+- **Android** : touche `a` ou QR Expo Go
+- **iOS** : scanner le QR avec **Expo Go** (SDK 57 requis sur l'App Store)
 
-Configurez `EXPO_PUBLIC_API_URL` :
-- Émulateur Android : `http://10.0.2.2:5000`
-- iPhone physique : `http://IP_DE_VOTRE_PC:5000`
+### Configuration réseau
 
-### Build production (APK / IPA)
+Dans `mobile/.env` :
 
-Installez EAS CLI puis construisez :
+```env
+EXPO_PUBLIC_API_URL=http://IP_DE_VOTRE_PC:5000
+```
+
+| Appareil | URL API typique |
+|----------|-----------------|
+| Émulateur Android | `http://10.0.2.2:5000` |
+| Simulateur iOS | `http://localhost:5000` |
+| Téléphone (Wi-Fi) | `http://192.168.x.x:5000` |
+
+Optionnel dans `mobile/.env.local` :
+
+```env
+REACT_NATIVE_PACKAGER_HOSTNAME=192.168.x.x
+```
+
+Backend requis à la racine du projet :
+
+```bash
+npm run dev:backend
+```
+
+## Scripts utiles
+
+```bash
+npm start              # LAN, port 8081
+npm run start:tunnel   # tunnel (iPhone hors LAN)
+npm run start:iphone   # tunnel + cache clear
+```
+
+## Build production (EAS)
 
 ```bash
 npm install -g eas-cli
 eas login
 eas build:configure
-```
-
-**Android (APK test)** :
-```bash
-eas build -p android --profile preview
-```
-
-**Android (Play Store)** :
-```bash
+eas build -p android --profile preview   # APK test
 eas build -p android --profile production
+eas build -p ios --profile production    # compte Apple Developer
 ```
 
-**iOS (App Store)** — nécessite un compte Apple Developer :
-```bash
-eas build -p ios --profile production
-```
-
-Identifiants configurés :
-- Android : `com.shopedoo.app`
-- iOS : `com.shopedoo.app`
-
-## Backend requis
-
-```bash
-# À la racine du projet
-npm run dev:backend
-```
-
-L'app mobile utilise la même API Express que le site web.
+Identifiants : `com.shopedoo.app` (Android & iOS).

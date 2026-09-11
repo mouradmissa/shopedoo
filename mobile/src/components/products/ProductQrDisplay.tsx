@@ -27,10 +27,10 @@ export function ProductQrDisplay({
     normalizeMediaUrl(qrCodeImage) ||
     (productId ? resolveProductQrImageUrl(productId) : undefined);
 
-  if (!qrCode && !imageUri && !qrCodePayload) return null;
+  if (!qrCode && !imageUri && !qrCodePayload && !productId) return null;
 
   const size = compact ? 112 : 176;
-  const showSvg = imageFailed || (!imageUri && !!qrCodePayload);
+  const showSvg = Boolean(qrCodePayload && (imageFailed || !imageUri));
 
   return (
     <View style={[styles.card, compact && styles.cardCompact]}>
@@ -48,7 +48,9 @@ export function ProductQrDisplay({
             onError={() => setImageFailed(true)}
           />
         ) : (
-          <View style={[styles.qrFrame, { width: size, height: size }]} />
+          <View style={[styles.qrFrame, { width: size, height: size }]}>
+            <Text style={styles.loadingText}>QR indisponible</Text>
+          </View>
         )}
         {qrCode ? (
           <Text style={styles.code} selectable>
@@ -103,5 +105,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     color: colors.foreground,
+  },
+  loadingText: {
+    fontSize: 11,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+    paddingHorizontal: 8,
   },
 });

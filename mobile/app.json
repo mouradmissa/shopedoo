@@ -7,11 +7,6 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "scheme": "shopedoo",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ff3131"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.shopedoo.app",
@@ -36,6 +31,15 @@
     },
     "plugins": [
       [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ff3131",
+          "imageWidth": 200
+        }
+      ],
+      [
         "expo-camera",
         {
           "cameraPermission": "Autoriser Shop-Edoo à utiliser la caméra pour scanner les QR codes."
@@ -53,12 +57,8 @@
           "merchantIdentifier": "merchant.com.shopedoo.app",
           "enableGooglePay": true
         }
-      ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "shop-edoo-mobile"
-      }
-    }
+      ],
+      "expo-font"
+    ]
   }
 }

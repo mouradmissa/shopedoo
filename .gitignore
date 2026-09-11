@@ -14,3 +14,7 @@ node_modules
 .next/
 backend/dist/
 .DS_Store
+tsconfig.tsbuildinfo
+.env
+backend/.env
+mobile/.env

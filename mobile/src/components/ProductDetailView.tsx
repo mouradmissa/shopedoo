@@ -28,6 +28,15 @@ interface Props {
   showBackButton?: boolean;
 }
 
+function resolveQrProductId(product: ProductItem): string | undefined {
+  return (
+    product.defaultProductId ||
+    product.storeAvailability?.find((row) => row.stock > 0)?.productId ||
+    product.storeAvailability?.[0]?.productId ||
+    product._id
+  );
+}
+
 function stockInfo(stock: number) {
   if (stock <= 0) {
     return { label: 'Rupture de stock', style: styles.stockOut };
@@ -42,15 +51,6 @@ function stockInfo(stock: number) {
     label: `En stock — ${stock} disponible${stock > 1 ? 's' : ''}`,
     style: styles.stockOk,
   };
-}
-
-function resolveQrProductId(product: ProductItem): string | undefined {
-  return (
-    product.defaultProductId ||
-    product.storeAvailability?.find((row) => row.stock > 0)?.productId ||
-    product.storeAvailability?.[0]?.productId ||
-    product._id
-  );
 }
 
 export function ProductDetailView({
@@ -71,8 +71,9 @@ export function ProductDetailView({
   const imageUrl = resolveCatalogItemImageUrl(product);
   const storeRows = product.storeAvailability ?? [];
   const qrProductId = resolveQrProductId(product);
-  const hasQr =
-    Boolean(product.qrCode || product.qrCodeImage || product.qrCodePayload || qrProductId);
+  const hasQr = Boolean(
+    product.qrCode || product.qrCodeImage || product.qrCodePayload || qrProductId
+  );
 
   return (
     <View style={styles.container}>

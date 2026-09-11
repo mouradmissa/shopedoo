@@ -76,10 +76,8 @@ curl -X POST http://localhost:5000/api/auth/signup \
 - bcryptjs for password hashing
 - CORS enabled for frontend communication
 
-## Next Steps
+## Related docs
 
-1. Implement Product Management APIs
-2. Implement QR Code generation and scanning
-3. Implement Cart and Order management
-4. Integrate Stripe payment processing
-5. Add Admin dashboard APIs
+- [Project README](../README.md)
+- [API documentation](./API_DOCUMENTATION.md)
+- [Mobile app](../mobile/README.md)
